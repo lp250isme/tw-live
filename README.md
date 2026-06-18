@@ -1,103 +1,71 @@
 <p align="center">
-  <img src="public/favicon.svg" alt="reservoir-view" width="120" height="120">
+  <img src="public/icon-dark.png" alt="TW Live" width="120" height="120" />
 </p>
 
-# reservoir-view — 台灣水庫即時水位儀表板
+<h1 align="center">台灣即時 · TW Live</h1>
+<p align="center">台灣政府開放資料的即時戰情室 — Taiwan government open data, live.</p>
 
-[English](#english) | [繁體中文](#繁體中文)
+<p align="center">
+  <a href="#english">English</a> · <a href="#繁體中文">繁體中文</a>
+</p>
+
+<p align="center">
+  🔗 <b>Live:</b> <a href="https://live.kvcc.me">live.kvcc.me</a>
+</p>
 
 ---
 
 ## English
 
-Taiwan reservoir real-time water level dashboard with a cyberpunk-style UI. Data sourced
-from [Water Resources Agency (WRA)](https://fhy.wra.gov.tw/) open API.
+A real-time dashboard that aggregates Taiwan's government open data into one cyberpunk "situation room" — reservoirs, YouBike, and more on the way (weather, air quality, transit, energy). A liquid gauge, an interactive map, and deep-linkable category pages, all in light / dark / auto themes and bilingual (中 / EN).
 
 ### Features
+- **Live data, one place** — each domain is a card-driven dashboard with grid + map views.
+- **Reservoirs** — real-time storage % of Taiwan's major reservoirs with the signature liquid gauge.
+- **YouBike** — live bike availability across ~1,700 Taipei stations on an interactive map.
+- **Deep links** — every category, view, search and sort lives in the URL (`/water?view=map`).
+- **Built to grow** — new sources are a small config + a Worker adapter away.
 
-- Real-time water level monitoring for 21 major reservoirs across Taiwan
-- Animated water gauge with multi-layer waves, rising bubbles, sparkle particles, and gyroscope/mouse-reactive reflections
-- Grid view with glassmorphism cards and status-colored glow borders
-- Interactive map view (Leaflet) with color-coded reservoir markers
-- Historical trend charts (Recharts)
-- Search by reservoir name or basin; sort by name, water level %, or basin
-- Dark mode with animated particle background and neon accents
-- Responsive (mobile / tablet / desktop)
+### Tech
+- **Frontend** — Vite + React 19 + Tailwind CSS v4, React Query, React Router, Leaflet, Recharts. Deployed on Vercel.
+- **Data proxy** — a Cloudflare Worker (`live-api.kvcc.me`) that holds API keys, normalizes each source, adds CORS, and edge-caches via the Cache API.
+- **Data** — [政府資料開放平臺 / Taiwan Open Data](https://data.gov.tw), WRA, and more.
 
-### Tech Stack
+### Data sources
+| Domain | Source | Key |
+|--------|--------|-----|
+| Reservoirs | WRA open data (datasets 45501 + 32726) | none |
+| YouBike | Taipei YouBike 2.0 | none |
+| Weather / quake (planned) | CWA Open Data | free key |
+| Air quality (planned) | MOENV Open Data | free key |
+| Transit (planned) | TDX | free OAuth |
 
-Vite · React 19 · Tailwind CSS v4 · Radix UI · TanStack Query (caching + auto-refresh) ·
-Leaflet + react-leaflet · Recharts · Lucide React
+### More by kv
+See the in-app **More by kv** section, or visit [kvcc.me](https://kvcc.me).
 
-### Getting Started
-
-```bash
-npm install
-npm run dev      # http://localhost:5173/reservoir-view/
-```
-
-| Command | Description |
-|---|---|
-| `npm run dev` | Start dev server |
-| `npm run build` | Production build to `dist/` |
-| `npm run preview` | Preview production build |
-| `npm run deploy` | Build and deploy to GitHub Pages |
-
-### API
-
-Data from WRA Open API (`https://fhy.wra.gov.tw/WraApi`):
-
-- `GET /v1/Reservoir/Station?$filter=Importance eq 1` — list of major reservoirs
-- `GET /v1/Reservoir/RealTimeInfo?$filter=StationNo eq '{id}'` — real-time data for a station
-
-### License
-
-MIT
+### Credit
+Open data © their respective agencies via Taiwan's open data platform. Built by kv.
 
 ---
 
 ## 繁體中文
 
-台灣水庫即時水位儀表板，賽博龐克風格 UI。資料來自
-[經濟部水利署（WRA）](https://fhy.wra.gov.tw/) 的開放 API。
+把台灣政府公開的即時資料匯集成一個 cyberpunk「戰情室」——水庫水情、YouBike，更多陸續加入（天氣、空品、交通、能源）。液態水位儀、互動地圖、可深連結的分類頁，支援淺色 / 深色 / 自動主題與中英雙語。
 
 ### 功能
-
-- 全台 21 座主要水庫的即時水位監看
-- 動態水位計：多層波浪、上升氣泡、閃爍粒子，以及隨陀螺儀／滑鼠反應的反光
-- 格狀檢視：玻璃擬態卡片 + 依狀態上色的光暈邊框
-- 互動地圖（Leaflet）：依水情顏色標示各水庫
-- 歷史趨勢圖（Recharts）
-- 依水庫名稱或流域搜尋；依名稱、水位百分比或流域排序
-- 深色模式：動態粒子背景 + 霓虹點綴
-- 響應式（手機／平板／桌機）
+- **即時資料一站匯集** — 每個領域都是卡片驅動的儀表板，含列表 + 地圖視圖。
+- **水庫** — 全台主要水庫即時蓄水率，招牌液態水位儀。
+- **YouBike** — 台北約 1,700 站即時可借車輛，互動地圖一覽。
+- **深連結** — 分類、視圖、搜尋、排序全寫進網址（`/water?view=map`）。
+- **可擴充** — 新資料源只需一份 config + 一個 Worker adapter。
 
 ### 技術
+- **前端** — Vite + React 19 + Tailwind CSS v4、React Query、React Router、Leaflet、Recharts，部署於 Vercel。
+- **資料代理** — Cloudflare Worker（`live-api.kvcc.me`）負責藏 API key、正規化各來源、處理 CORS、用 Cache API 邊緣快取。
+- **資料** — [政府資料開放平臺](https://data.gov.tw)、水利署等。
 
-Vite · React 19 · Tailwind CSS v4 · Radix UI · TanStack Query（快取 + 自動刷新）·
-Leaflet + react-leaflet · Recharts · Lucide React
+### 更多作品
+見 App 內 **More by kv** 區塊，或前往 [kvcc.me](https://kvcc.me)。
 
-### 開始
-
-```bash
-npm install
-npm run dev      # http://localhost:5173/reservoir-view/
-```
-
-| 指令 | 說明 |
-|---|---|
-| `npm run dev` | 啟動開發伺服器 |
-| `npm run build` | 打包到 `dist/` |
-| `npm run preview` | 預覽 production build |
-| `npm run deploy` | 打包並部署到 GitHub Pages |
-
-### API
-
-資料來自 WRA 開放 API（`https://fhy.wra.gov.tw/WraApi`）：
-
-- `GET /v1/Reservoir/Station?$filter=Importance eq 1` — 主要水庫清單
-- `GET /v1/Reservoir/RealTimeInfo?$filter=StationNo eq '{id}'` — 單一測站即時資料
-
-### 授權
-
-MIT
+### 致謝
+開放資料著作權屬各主管機關（經由政府資料開放平臺）。Built by kv.

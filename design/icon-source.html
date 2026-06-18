@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; padding: 0; background: transparent; }
+  .row { display: flex; }
+  svg { display: block; }
+</style>
+</head>
+<body>
+<div class="row">
+  <!-- ================= LIGHT ================= -->
+  <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <clipPath id="l-clip"><rect x="0" y="0" width="512" height="512" rx="108" /></clipPath>
+      <radialGradient id="l-mesh1" cx="30%" cy="22%" r="80%">
+        <stop offset="0%" stop-color="#e6f6ff" /><stop offset="100%" stop-color="#cfe9fb" />
+      </radialGradient>
+      <radialGradient id="l-mesh2" cx="80%" cy="90%" r="70%">
+        <stop offset="0%" stop-color="#a9d8f5" stop-opacity="0.9" /><stop offset="100%" stop-color="#a9d8f5" stop-opacity="0" />
+      </radialGradient>
+      <linearGradient id="l-glass" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85" /><stop offset="100%" stop-color="#dbeefb" stop-opacity="0.5" />
+      </linearGradient>
+      <radialGradient id="l-glow" cx="50%" cy="42%" r="55%">
+        <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.30" /><stop offset="100%" stop-color="#0ea5e9" stop-opacity="0" />
+      </radialGradient>
+      <linearGradient id="l-spec" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" /><stop offset="35%" stop-color="#ffffff" stop-opacity="0" />
+      </linearGradient>
+      <filter id="l-blur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6" /></filter>
+    </defs>
+    <g clip-path="url(#l-clip)">
+      <rect width="512" height="512" fill="url(#l-mesh1)" />
+      <rect width="512" height="512" fill="url(#l-mesh2)" />
+      <!-- grid -->
+      <g stroke="#0ea5e9" stroke-opacity="0.10" stroke-width="2">
+        <path d="M0 170 H512 M0 256 H512 M0 342 H512 M128 0 V512 M256 0 V512 M384 0 V512" />
+      </g>
+      <!-- glass body -->
+      <rect x="86" y="86" width="340" height="340" rx="80" fill="url(#l-glass)" stroke="#ffffff" stroke-opacity="0.9" stroke-width="2" />
+      <rect x="86" y="86" width="340" height="340" rx="80" fill="url(#l-glow)" />
+      <!-- pulse line (neon) -->
+      <g filter="url(#l-blur)">
+        <polyline points="120,300 180,300 210,210 250,360 290,250 320,300 392,300" fill="none" stroke="#0284c7" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" />
+      </g>
+      <polyline points="120,300 180,300 210,210 250,360 290,250 320,300 392,300" fill="none" stroke="#0ea5e9" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+      <circle cx="392" cy="300" r="16" fill="#0ea5e9" />
+      <circle cx="392" cy="300" r="16" fill="#0ea5e9" filter="url(#l-blur)" />
+      <!-- specular sweep -->
+      <path d="M86 166 Q256 86 426 166 L426 86 Q256 86 86 86 Z" fill="url(#l-spec)" opacity="0.5" />
+    </g>
+  </svg>
+
+  <!-- ================= DARK ================= -->
+  <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <clipPath id="d-clip"><rect x="0" y="0" width="512" height="512" rx="108" /></clipPath>
+      <radialGradient id="d-mesh1" cx="28%" cy="20%" r="85%">
+        <stop offset="0%" stop-color="#0b2942" /><stop offset="60%" stop-color="#071a2e" /><stop offset="100%" stop-color="#040d18" />
+      </radialGradient>
+      <radialGradient id="d-mesh2" cx="82%" cy="92%" r="70%">
+        <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.30" /><stop offset="100%" stop-color="#0ea5e9" stop-opacity="0" />
+      </radialGradient>
+      <linearGradient id="d-glass" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#13314d" stop-opacity="0.92" /><stop offset="100%" stop-color="#0a1f33" stop-opacity="0.92" />
+      </linearGradient>
+      <radialGradient id="d-glow" cx="50%" cy="40%" r="58%">
+        <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.45" /><stop offset="100%" stop-color="#22d3ee" stop-opacity="0" />
+      </radialGradient>
+      <linearGradient id="d-spec" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.5" /><stop offset="38%" stop-color="#ffffff" stop-opacity="0" />
+      </linearGradient>
+      <filter id="d-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7" /></filter>
+    </defs>
+    <g clip-path="url(#d-clip)">
+      <rect width="512" height="512" fill="url(#d-mesh1)" />
+      <rect width="512" height="512" fill="url(#d-mesh2)" />
+      <g stroke="#38bdf8" stroke-opacity="0.12" stroke-width="2">
+        <path d="M0 170 H512 M0 256 H512 M0 342 H512 M128 0 V512 M256 0 V512 M384 0 V512" />
+      </g>
+      <rect x="86" y="86" width="340" height="340" rx="80" fill="url(#d-glass)" stroke="#7dd3fc" stroke-opacity="0.30" stroke-width="2" />
+      <rect x="86" y="86" width="340" height="340" rx="80" fill="url(#d-glow)" />
+      <!-- pulse line (neon glow) -->
+      <g filter="url(#d-blur)">
+        <polyline points="120,300 180,300 210,210 250,360 290,250 320,300 392,300" fill="none" stroke="#22d3ee" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.7" />
+      </g>
+      <polyline points="120,300 180,300 210,210 250,360 290,250 320,300 392,300" fill="none" stroke="#67e8f9" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" />
+      <circle cx="392" cy="300" r="17" fill="#a5f3fc" />
+      <circle cx="392" cy="300" r="22" fill="#22d3ee" filter="url(#d-blur)" />
+      <path d="M86 166 Q256 96 426 166 L426 86 Q256 86 86 86 Z" fill="url(#d-spec)" opacity="0.6" />
+    </g>
+  </svg>
+</div>
+</body>
+</html>

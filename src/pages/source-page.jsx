@@ -89,7 +89,7 @@ export default function SourcePage() {
   if (error) return <ErrorState onRetry={refetch} />
 
   return (
-    <>
+    <div style={{ '--color-primary': source.accent }}>
       <div className="flex flex-col sm:flex-row gap-3 mb-5">
         <SearchFilter
           source={source}
@@ -155,6 +155,6 @@ export default function SourcePage() {
         item={dialog.item}
         detail={dialog.detail}
       />
-    </>
+    </div>
   )
 }
