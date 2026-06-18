@@ -5,20 +5,6 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs))
 }
 
-export function getWaterStatus(percentage) {
-  if (percentage <= 10) return 'critical'
-  if (percentage <= 20) return 'warning'
-  if (percentage <= 50) return 'watch'
-  return 'normal'
-}
-
-export const statusConfig = {
-  normal: { label: '水量正常', color: 'text-water-normal', bg: 'bg-water-normal', borderColor: 'border-water-normal' },
-  watch: { label: '水量偏低', color: 'text-water-watch', bg: 'bg-water-watch', borderColor: 'border-water-watch' },
-  warning: { label: '水量不足', color: 'text-water-warning', bg: 'bg-water-warning', borderColor: 'border-water-warning' },
-  critical: { label: '水量嚴重不足', color: 'text-water-critical', bg: 'bg-water-critical', borderColor: 'border-water-critical' },
-}
-
 export function formatPercentage(value) {
   if (value == null) return '--'
   return Number(value).toFixed(1)
@@ -27,4 +13,17 @@ export function formatPercentage(value) {
 export function formatNumber(value) {
   if (value == null) return '--'
   return Number(value).toLocaleString('zh-TW')
+}
+
+// #rrggbb (or #rgb) -> rgba(...) with the given alpha. Used to derive tier
+// glow/border/badge colours from a single source accent/tier colour.
+export function withAlpha(hex, a) {
+  if (typeof hex !== 'string') return `rgba(148,163,184,${a})`
+  let h = hex.replace('#', '')
+  if (h.length === 3) h = h.split('').map((c) => c + c).join('')
+  const n = parseInt(h, 16)
+  const r = (n >> 16) & 255
+  const g = (n >> 8) & 255
+  const b = n & 255
+  return `rgba(${r}, ${g}, ${b}, ${a})`
 }
