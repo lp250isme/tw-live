@@ -21,8 +21,9 @@ export default function SourcePage() {
   const [params, setParams] = useSearchParams()
   const [dialog, setDialog] = useState({ open: false, item: null, detail: null })
 
-  const hasMap = !!source && source.views.includes('map')
-  const view = params.get('view') === 'map' && hasMap ? 'map' : 'grid'
+  const supported = source?.views ?? ['grid']
+  const reqView = params.get('view')
+  const view = reqView && supported.includes(reqView) ? reqView : supported.includes('grid') ? 'grid' : supported[0]
   const search = params.get('q') || ''
   const sortBy = params.get('sort') || source?.sortOptions?.[0]?.key || 'name'
 
@@ -97,12 +98,12 @@ export default function SourcePage() {
           sortBy={sortBy}
           onSortChange={(v) => setParam('sort', v)}
         />
-        {hasMap && (
+        {supported.length > 1 && (
           <div className="flex rounded-full border border-primary/20 p-0.5 neon-toggle self-start">
             {[
               { key: 'grid', Icon: LayoutGrid, label: { zh: '列表', en: 'Grid' } },
               { key: 'map', Icon: MapIcon, label: { zh: '地圖', en: 'Map' } },
-            ].map(({ key, Icon, label }) => (
+            ].filter(({ key }) => supported.includes(key)).map(({ key, Icon, label }) => (
               <button
                 key={key}
                 onClick={() => setParam('view', key === 'map' ? 'map' : '')}
@@ -139,12 +140,12 @@ export default function SourcePage() {
 
       {isLoading ? (
         <LoadingSkeleton />
-      ) : view === 'grid' ? (
-        <DataGrid source={source} items={filtered} onCardClick={onCardClick} />
-      ) : (
+      ) : view === 'map' ? (
         <Suspense fallback={<LoadingSkeleton />}>
           <MapView source={source} items={filtered} detailMap={detailMap} onMarkerClick={onCardClick} />
         </Suspense>
+      ) : (
+        <DataGrid source={source} items={filtered} onCardClick={onCardClick} />
       )}
 
       <DetailDialog

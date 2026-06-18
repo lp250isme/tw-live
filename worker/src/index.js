@@ -1,11 +1,13 @@
 import { handleOptions, json } from './cors'
 import { handleWater } from './sources/water'
+import { handleYouBike } from './sources/youbike'
 
 // tw-live-api — unified proxy/aggregator for Taiwan government open data.
 // Holds upstream API keys (later sources), normalizes responses, adds CORS, and
 // edge-caches via the Cache API. Each source is a small adapter under sources/.
 const ROUTES = {
   '/api/water': handleWater,
+  '/api/youbike': handleYouBike,
 }
 
 export default {

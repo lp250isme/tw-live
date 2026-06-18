@@ -1,8 +1,9 @@
 import water from './water'
+import youbike from './youbike'
 
 // Source registry. Add new gov-data sources here; the whole hub (nav, overview
 // tiles, dashboards) is driven off this list.
-export const sources = [water]
+export const sources = [water, youbike]
 
 export const sourceMap = Object.fromEntries(sources.map((s) => [s.id, s]))
 
