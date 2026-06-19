@@ -1,13 +1,15 @@
 import { NavLink } from 'react-router-dom'
-import { Sun, Moon, Monitor, Activity } from 'lucide-react'
+import { Sun, Moon, Monitor, Activity, Navigation } from 'lucide-react'
 import { sources } from '@/lib/sources'
 import { useLang } from '@/lib/i18n'
+import { useGeo } from '@/lib/geo-context'
 import { cn } from '@/lib/utils'
 
 const themeIcon = { light: Sun, dark: Moon, auto: Monitor }
 
 export default function Header({ theme }) {
   const { lang, setLang, t } = useLang()
+  const { coords, status, request, clear } = useGeo()
   const ThemeIcon = themeIcon[theme.choice] ?? Moon
 
   return (
@@ -57,6 +59,20 @@ export default function Header({ theme }) {
 
         {/* Controls */}
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => (coords ? clear() : request())}
+            className={cn(
+              'rounded-full p-2.5 border transition-all duration-300',
+              coords
+                ? 'border-primary/60 text-primary shadow-[0_0_12px_rgba(14,165,233,0.25)]'
+                : 'border-border/50 hover:border-primary/40',
+              status === 'loading' && 'opacity-60'
+            )}
+            aria-label={t({ zh: '使用我的位置', en: 'Use my location' })}
+            title={coords ? t({ zh: '已定位（點擊取消）', en: 'Located (click to clear)' }) : t({ zh: '依距離排序附近資料', en: 'Sort nearby by distance' })}
+          >
+            <Navigation className={cn('h-4 w-4', status === 'loading' && 'animate-pulse')} />
+          </button>
           <button
             onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
             className="rounded-full px-2.5 py-2 border border-border/50 hover:border-primary/40 transition-all duration-300 text-xs font-semibold w-9"

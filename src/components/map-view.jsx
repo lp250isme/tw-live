@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet'
 import { getTier } from '@/lib/tier'
 import { useLang } from '@/lib/i18n'
+import { useGeo } from '@/lib/geo-context'
+import { itemDistance, formatDistance } from '@/lib/geo'
 import 'leaflet/dist/leaflet.css'
 
 const TAIWAN_CENTER = [23.7, 120.9]
@@ -18,6 +20,7 @@ function FitBounds({ items }) {
 
 export default function MapView({ source, items, detailMap, onMarkerClick }) {
   const { t } = useLang()
+  const { coords } = useGeo()
   const valid = items.filter((r) => r.lat && r.lng)
 
   return (
@@ -25,6 +28,16 @@ export default function MapView({ source, items, detailMap, onMarkerClick }) {
       <MapContainer center={TAIWAN_CENTER} zoom={TAIWAN_ZOOM} className="h-full w-full" scrollWheelZoom={true}>
         <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <FitBounds items={valid} />
+
+        {coords && (
+          <CircleMarker
+            center={[coords.lat, coords.lng]}
+            radius={8}
+            pathOptions={{ color: '#ffffff', fillColor: '#0ea5e9', fillOpacity: 1, weight: 3 }}
+          >
+            <Tooltip direction="top" offset={[0, -8]}>{t({ zh: '我的位置', en: 'My location' })}</Tooltip>
+          </CircleMarker>
+        )}
 
         {valid.map((item) => {
           const eff = source.hasDetail ? detailMap?.[item.id] : { value: item.value, ts: item.ts, raw: item.raw }
@@ -47,10 +60,15 @@ export default function MapView({ source, items, detailMap, onMarkerClick }) {
                   <div className="font-semibold">{item.name}</div>
                   {value != null && (
                     <div className="text-sm">
-                      {source.formatValue ? source.formatValue(value) : value}{source.unit}
+                      {source.formatValue ? source.formatValue(value) : value}
+                      {typeof source.unit === 'string' ? source.unit : t(source.unit)}
                       {meta ? ` · ${t(meta.label)}` : ''}
                     </div>
                   )}
+                  {(() => {
+                    const d = itemDistance(coords, item)
+                    return d != null ? <div className="text-xs opacity-70">{formatDistance(d)}</div> : null
+                  })()}
                 </div>
               </Tooltip>
             </CircleMarker>

@@ -5,6 +5,8 @@ import { LayoutGrid, Map as MapIcon } from 'lucide-react'
 import { getSource } from '@/lib/sources'
 import { useSourceList } from '@/hooks/use-source'
 import { useLang } from '@/lib/i18n'
+import { useGeo } from '@/lib/geo-context'
+import { itemDistance } from '@/lib/geo'
 import { cn } from '@/lib/utils'
 import SearchFilter from '@/components/search-filter'
 import DataGrid from '@/components/data-grid'
@@ -25,7 +27,12 @@ export default function SourcePage() {
   const reqView = params.get('view')
   const view = reqView && supported.includes(reqView) ? reqView : supported.includes('grid') ? 'grid' : supported[0]
   const search = params.get('q') || ''
-  const sortBy = params.get('sort') || source?.sortOptions?.[0]?.key || 'name'
+  const { coords } = useGeo()
+  // when located, offer (and default to) a distance sort
+  const sortOptions = coords
+    ? [{ key: 'distance', label: { zh: '附近 近→遠', en: 'Nearest first' } }, ...(source?.sortOptions ?? [])]
+    : source?.sortOptions ?? []
+  const sortBy = params.get('sort') || (coords ? 'distance' : source?.sortOptions?.[0]?.key || 'name')
 
   const { data: items, isLoading, error, refetch } = useSourceList(source ?? { id: '_none', fetchList: async () => [] })
 
@@ -65,11 +72,12 @@ export default function SourcePage() {
       group: (a, b) => (a.group || '').localeCompare(b.group || '', 'zh-TW'),
       'value-asc': (a, b) => (valueOf(a) ?? -1) - (valueOf(b) ?? -1),
       'value-desc': (a, b) => (valueOf(b) ?? -1) - (valueOf(a) ?? -1),
+      distance: (a, b) => (itemDistance(coords, a) ?? Infinity) - (itemDistance(coords, b) ?? Infinity),
     }[sortBy]
     if (cmp) result.sort(cmp)
     return result
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, search, sortBy, detailMap, source])
+  }, [items, search, sortBy, detailMap, source, coords])
 
   if (!source) return <Navigate to="/" replace />
 
@@ -93,6 +101,7 @@ export default function SourcePage() {
       <div className="flex flex-col sm:flex-row gap-3 mb-5">
         <SearchFilter
           source={source}
+          sortOptions={sortOptions}
           search={search}
           onSearchChange={(v) => setParam('q', v)}
           sortBy={sortBy}

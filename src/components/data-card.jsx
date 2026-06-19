@@ -2,12 +2,16 @@ import { MapPin } from 'lucide-react'
 import { cn, withAlpha } from '@/lib/utils'
 import { getTier } from '@/lib/tier'
 import { useLang } from '@/lib/i18n'
+import { useGeo } from '@/lib/geo-context'
+import { itemDistance, formatDistance } from '@/lib/geo'
 import { useSourceDetail } from '@/hooks/use-source-detail'
 import MetricGauge from './metric-gauge'
 import StatusBadge from './status-badge'
 
 export default function DataCard({ source, item, onClick }) {
   const { t } = useLang()
+  const { coords } = useGeo()
+  const dist = itemDistance(coords, item)
   // hasDetail sources fetch per-card (deduped by query key); others carry value.
   const { data: detail, isLoading } = useSourceDetail(source, item, source.hasDetail)
   const eff = source.hasDetail ? detail : { value: item.value, ts: item.ts, raw: item.raw }
@@ -39,10 +43,15 @@ export default function DataCard({ source, item, onClick }) {
             <h3 className="font-semibold text-base truncate group-hover:text-primary transition-colors duration-300">
               {item.name}
             </h3>
-            {item.group && (
+            {(item.group || dist != null) && (
               <div className="flex items-center gap-1 mt-1 text-muted-foreground">
                 <MapPin className="h-3 w-3 shrink-0" />
-                <span className="text-xs truncate">{item.group}</span>
+                <span className="text-xs truncate">
+                  {item.group}
+                  {dist != null && (
+                    <span className="text-primary/80">{item.group ? ' · ' : ''}{formatDistance(dist)}</span>
+                  )}
+                </span>
               </div>
             )}
           </div>

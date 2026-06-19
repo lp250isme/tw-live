@@ -22,7 +22,7 @@ function SelectItem({ children, className, value, ...props }) {
   )
 }
 
-export default function SearchFilter({ source, search, onSearchChange, sortBy, onSortChange }) {
+export default function SearchFilter({ source, sortOptions = source.sortOptions, search, onSearchChange, sortBy, onSortChange }) {
   const { t } = useLang()
   const placeholder = t({ zh: `搜尋${t(source.name)}…`, en: `Search ${t(source.name)}…` })
 
@@ -42,7 +42,7 @@ export default function SearchFilter({ source, search, onSearchChange, sortBy, o
         </div>
       </div>
 
-      {source.sortOptions?.length > 0 && (
+      {sortOptions?.length > 0 && (
         <Select.Root value={sortBy} onValueChange={onSortChange}>
           <Select.Trigger className={cn('inline-flex items-center gap-2 rounded-xl glass-input px-4 py-3 text-sm', 'hover:border-primary/30 transition-all duration-300 min-w-[180px]')}>
             <ArrowUpDown className="h-4 w-4 text-primary/60" />
@@ -52,7 +52,7 @@ export default function SearchFilter({ source, search, onSearchChange, sortBy, o
           <Select.Portal>
             <Select.Content className="overflow-hidden rounded-xl glass-dropdown shadow-[0_8px_32px_rgba(0,0,0,0.3)] z-[100] border border-primary/10" position="popper" sideOffset={4}>
               <Select.Viewport className="p-1.5">
-                {source.sortOptions.map((opt) => (
+                {sortOptions.map((opt) => (
                   <SelectItem key={opt.key} value={opt.key}>{t(opt.label)}</SelectItem>
                 ))}
               </Select.Viewport>
