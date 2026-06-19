@@ -27,7 +27,18 @@ export function GeoProvider({ children }) {
           /* ignore */
         }
       },
-      () => setStatus('denied'),
+      (err) => {
+        setStatus('denied')
+        // Permission actually revoked (not a timeout) → forget the preference so
+        // we don't re-prompt on every reopen.
+        if (err?.code === 1) {
+          try {
+            localStorage.removeItem(GEO_PREF)
+          } catch {
+            /* ignore */
+          }
+        }
+      },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
     )
   }, [])
@@ -42,8 +53,10 @@ export function GeoProvider({ children }) {
     }
   }, [])
 
-  // Auto-restore: only if previously enabled and the OS permission is still
-  // granted — querying first avoids prompting an unsuspecting visitor.
+  // Auto-restore if the user enabled location before. Where the Permissions API
+  // can confirm 'granted' (desktop) we use it to avoid a surprise prompt; where
+  // it can't (iOS Safari has no 'geolocation' permission name → query rejects)
+  // we just retry — a still-granted permission resolves silently.
   useEffect(() => {
     let on = true
     try {
@@ -51,12 +64,19 @@ export function GeoProvider({ children }) {
     } catch {
       return
     }
-    navigator.permissions
-      ?.query({ name: 'geolocation' })
-      .then((p) => {
-        if (on && p.state === 'granted') request()
-      })
-      .catch(() => {})
+    const run = () => {
+      if (on) request()
+    }
+    if (navigator.permissions?.query) {
+      navigator.permissions
+        .query({ name: 'geolocation' })
+        .then((p) => {
+          if (p.state === 'granted') run()
+        })
+        .catch(run)
+    } else {
+      run()
+    }
     return () => {
       on = false
     }
