@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 
-const GEO_PREF = 'twlive-geo'
+const COORDS_KEY = 'twlive-coords'
+const MAX_AGE = 7 * 24 * 60 * 60 * 1000 // reuse a cached location for up to 7 days
 
-// Shares the user's geolocation across the app. Requested on a user gesture;
-// if the user enabled it before AND the permission is still granted, it's
-// restored automatically on load (no surprise prompt) so "nearest first" sticks.
+// Shares the user's geolocation across the app. The last fix is cached on-device
+// and reloaded instantly on next open (no re-prompt, no iOS gesture/permission
+// quirks) so "nearest first" persists; tapping the button refreshes it. Cached
+// coords are plenty accurate for distance sorting.
 const GeoCtx = createContext(null)
 
 export function GeoProvider({ children }) {
@@ -19,26 +21,16 @@ export function GeoProvider({ children }) {
     setStatus('loading')
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+        const c = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        setCoords(c)
         setStatus('granted')
         try {
-          localStorage.setItem(GEO_PREF, '1')
+          localStorage.setItem(COORDS_KEY, JSON.stringify({ ...c, t: Date.now() }))
         } catch {
           /* ignore */
         }
       },
-      (err) => {
-        setStatus('denied')
-        // Permission actually revoked (not a timeout) → forget the preference so
-        // we don't re-prompt on every reopen.
-        if (err?.code === 1) {
-          try {
-            localStorage.removeItem(GEO_PREF)
-          } catch {
-            /* ignore */
-          }
-        }
-      },
+      () => setStatus('denied'),
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
     )
   }, [])
@@ -47,40 +39,27 @@ export function GeoProvider({ children }) {
     setCoords(null)
     setStatus('idle')
     try {
-      localStorage.removeItem(GEO_PREF)
+      localStorage.removeItem(COORDS_KEY)
     } catch {
       /* ignore */
     }
   }, [])
 
-  // Auto-restore if the user enabled location before. Where the Permissions API
-  // can confirm 'granted' (desktop) we use it to avoid a surprise prompt; where
-  // it can't (iOS Safari has no 'geolocation' permission name → query rejects)
-  // we just retry — a still-granted permission resolves silently.
+  // Restore the last cached location on open — instant and reliable, regardless
+  // of how iOS handles geolocation permission persistence.
   useEffect(() => {
-    let on = true
     try {
-      if (localStorage.getItem(GEO_PREF) !== '1') return
+      const raw = localStorage.getItem(COORDS_KEY)
+      if (!raw) return
+      const c = JSON.parse(raw)
+      if (typeof c?.lat === 'number' && typeof c?.lng === 'number' && (!c.t || Date.now() - c.t < MAX_AGE)) {
+        setCoords({ lat: c.lat, lng: c.lng })
+        setStatus('granted')
+      }
     } catch {
-      return
+      /* ignore */
     }
-    const run = () => {
-      if (on) request()
-    }
-    if (navigator.permissions?.query) {
-      navigator.permissions
-        .query({ name: 'geolocation' })
-        .then((p) => {
-          if (p.state === 'granted') run()
-        })
-        .catch(run)
-    } else {
-      run()
-    }
-    return () => {
-      on = false
-    }
-  }, [request])
+  }, [])
 
   return <GeoCtx.Provider value={{ coords, status, request, clear }}>{children}</GeoCtx.Provider>
 }
