@@ -6,9 +6,12 @@
     <link rel="icon" type="image/png" href="/icon.png" media="(prefers-color-scheme: light)" />
     <link rel="icon" type="image/png" href="/icon-dark.png" media="(prefers-color-scheme: dark)" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="台灣即時資料戰情室 — 一站匯集政府公開的即時資料：水情、空品、天氣、交通、能源。" />
-    <meta name="theme-color" content="#050b18" />
+    <meta name="description" content="台灣即時資料戰情室 — 一站匯集政府公開的即時資料：水情、天氣、空品、地震、交通。" />
+    <meta name="theme-color" content="#08090a" />
     <title>台灣即時 · 開放資料戰情室</title>
     <script>
       // Pre-paint theme: apply resolved data-theme before first paint to avoid flash.
@@ -17,6 +20,7 @@
           var c = localStorage.getItem('twlive-theme') || 'dark';
           var dark = c === 'dark' || (c === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
           document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+          document.querySelector('meta[name=theme-color]').setAttribute('content', dark ? '#08090a' : '#fbfbfc');
         } catch (e) {
           document.documentElement.dataset.theme = 'dark';
         }

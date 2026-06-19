@@ -20,18 +20,14 @@ export default function Header({ theme }) {
         {/* Brand */}
         <NavLink to="/" className="flex items-center gap-2.5 shrink-0">
           <div className="relative">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 logo-glow">
-              <Activity className="h-5 w-5 text-primary drop-shadow-[0_0_6px_rgba(14,165,233,0.5)]" />
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg border border-border logo-glow">
+              <Activity className="h-[18px] w-[18px] text-primary" />
             </div>
             <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary status-dot" />
           </div>
           <div className="leading-tight">
-            <h1 className="text-base font-bold tracking-tight">
-              <span className="bg-gradient-to-r from-primary via-cyan-400 to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-[shimmer_3s_linear_infinite]">
-                台灣即時
-              </span>
-            </h1>
-            <p className="text-[10px] text-muted-foreground/60 tracking-widest uppercase">TW Live · Open Data</p>
+            <h1 className="text-[15px] font-semibold tracking-tight text-foreground">台灣即時</h1>
+            <p className="text-[10px] text-muted-foreground tracking-widest uppercase">TW Live · Open Data</p>
           </div>
         </NavLink>
 

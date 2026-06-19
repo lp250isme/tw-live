@@ -30,8 +30,8 @@ export default function DataCard({ source, item, onClick }) {
       onClick={() => onClick(item, eff)}
       className={cn(
         'group relative flex flex-col items-center gap-3 rounded-2xl p-5',
-        'glass-card transition-all duration-300',
-        'hover:-translate-y-1 hover:scale-[1.02] cursor-pointer text-left w-full'
+        'glass-card transition-all duration-200 rounded-xl',
+        'hover:-translate-y-0.5 cursor-pointer text-left w-full'
       )}
       style={{ '--card-glow': glow, '--card-border': border }}
     >

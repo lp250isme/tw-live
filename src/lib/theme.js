@@ -5,8 +5,8 @@ import { useState, useEffect, useCallback } from 'react'
 // <meta theme-color> is kept in sync. A pre-paint inline script in index.html
 // applies the initial value to avoid a flash. Dark-first (cyberpunk war-room).
 const KEY = 'twlive-theme'
-const DARK_BG = '#050b18'
-const LIGHT_BG = '#ffffff'
+const DARK_BG = '#08090a'
+const LIGHT_BG = '#fbfbfc'
 
 const mq = () => window.matchMedia('(prefers-color-scheme: dark)')
 const resolve = (choice) => (choice === 'auto' ? (mq().matches ? 'dark' : 'light') : choice)

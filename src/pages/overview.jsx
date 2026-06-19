@@ -10,7 +10,7 @@ function SourceTile({ source }) {
   return (
     <Link
       to={`/${source.id}`}
-      className="group relative flex flex-col gap-3 rounded-2xl p-5 glass-card transition-all duration-300 hover:-translate-y-1"
+      className="group relative flex flex-col gap-3 rounded-xl p-5 glass-card transition-all duration-200 hover:-translate-y-0.5"
       style={{ '--card-glow': withAlpha(source.accent, 0.18), '--card-border': withAlpha(source.accent, 0.3) }}
     >
       <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 animated-card-border" />
@@ -40,10 +40,8 @@ export default function Overview() {
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
           {t({ zh: '即時 · 政府開放資料', en: 'Live · Government Open Data' })}
         </div>
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-          <span className="bg-gradient-to-r from-primary via-cyan-400 to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-[shimmer_4s_linear_infinite]">
-            {t({ zh: '台灣即時資料戰情室', en: 'Taiwan Live Data Console' })}
-          </span>
+        <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
+          {t({ zh: '台灣即時資料戰情室', en: 'Taiwan Live Data Console' })}
         </h2>
         <p className="text-sm text-muted-foreground/70 mt-3 max-w-md mx-auto">
           {t({ zh: '一站匯集台灣政府公開的即時資料：水情、空品、天氣、交通、能源……', en: 'One place for Taiwan’s real-time open data — water, air, weather, transit, energy…' })}
