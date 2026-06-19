@@ -4,6 +4,7 @@ import { handleYouBike } from './sources/youbike'
 import { handleAir } from './sources/air'
 import { handleWeather } from './sources/weather'
 import { handleParking } from './sources/parking'
+import { handleRiver } from './sources/river'
 import { handleQuake } from './sources/quake'
 import { handleRain } from './sources/rain'
 import { handleUV } from './sources/uv'
@@ -18,6 +19,7 @@ const ROUTES = {
   '/api/air': handleAir,
   '/api/weather': handleWeather,
   '/api/parking': handleParking,
+  '/api/river': handleRiver,
   '/api/quake': handleQuake,
   '/api/rain': handleRain,
   '/api/uv': handleUV,

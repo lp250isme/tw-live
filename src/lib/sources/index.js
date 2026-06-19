@@ -1,4 +1,5 @@
 import water from './water'
+import river from './river'
 import air from './air'
 import weather from './weather'
 import rain from './rain'
@@ -9,7 +10,7 @@ import parking from './parking'
 
 // Source registry. Add new gov-data sources here; the whole hub (nav, overview
 // tiles, dashboards) is driven off this list.
-export const sources = [water, weather, rain, air, quake, uv, youbike, parking]
+export const sources = [water, river, weather, rain, air, quake, uv, youbike, parking]
 
 export const sourceMap = Object.fromEntries(sources.map((s) => [s.id, s]))
 
