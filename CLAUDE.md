@@ -67,7 +67,15 @@ water·river(WRA)｜weather·rain·uv·quake(CWA)｜air(MOENV)｜youbike·parkin
 - `summary.js`：`/api/summary` 聚合端點——呼叫 11 個 list handler→`.json()`→**通用數值 reduce**
   （count/sum/mean/min/max，不碰 tier，避免與前端 config 漂移），整包 `withEdgeCache('summary',300)`。
   首頁吃它（~1KB，**別**讓首頁抓 11 個完整清單＝~143KB）。**新增源時 `LIST_HANDLERS` 要加一筆。**
-- `track.js`：`/api/track` 點擊情報寫 KV `twlog:*`（每 session 每源一次）、
+- `push.js`：**自架 Web Push**（VAPID + RFC8291 aes128gcm，全用 WebCrypto，無第三方、零成本）。
+  `/api/push/subscribe` 存訂閱進 KV `push:*`；`/api/push/test` 對 body 的訂閱發一則（只能測自己，免 gate）；
+  `pushToAll` fan-out + 清 410/404 死訂閱。VAPID 私鑰 secret `VAPID_PRIVATE_JWK`、`VAPID_SUBJECT`；
+  前端公鑰在 `src/lib/push.js`（base64url uncompressed point，公開）。**加密已用 http_ece 互通驗證過**。
+- `oil-watch.js`：`checkOilUpdate` 抓 oil 比對 KV `oil:lastTs`，**生效日變動才推**（首次只 seed 不推、推完寫 lastTs 不重推）。
+  **無自己的 cron**（帳號達 5-cron 上限）→ 開 `/api/cron/oil-check`（`OIL_CRON_KEY` header gate），由 **shortlink worker 每日 02:00 UTC cron 借觸發**。
+- 前端 PWA：`public/sw.js`(push/notificationclick)、修正後的 `manifest.json`、油價頁 `<OilNotify>` 訂閱入口
+  （**iOS 必須先「加到主畫面」**才有 PushManager，元件會偵測 standalone 給對應指引）。
+- `track.js`：`/api/track` 點擊情報寫 KV `twlog:*`（每 session 每源一次，含使用者授權定位的 la/ln）、
   `/api/track-stats` 聚合；go.kvcc.me Console 的「TW Live」分頁讀它。
 - secrets：`CWA_KEY`、`MOENV_KEY`(選)、`TDX_CLIENT_ID/SECRET`（`wrangler secret put`）。
 
