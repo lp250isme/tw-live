@@ -6,6 +6,8 @@
   "observability": { "enabled": true },
   // KV only caches the TDX OAuth token (~1 write/day) — data uses Cache API.
   "kv_namespaces": [{ "binding": "TDX_KV", "id": "d18c85d33c0f46f989427f3b87972ea1" }],
+  // Click intelligence → Analytics Engine (zero KV writes, queried by the kv Console).
+  "analytics_engine_datasets": [{ "binding": "EVENTS", "dataset": "tw_live_events" }],
   // Custom domain (provisioned on deploy; kvcc.me zone is on this account).
   // Comment out for the first workers.dev-only deploy if the zone isn't ready.
   "routes": [{ "pattern": "live-api.kvcc.me", "custom_domain": true }]

@@ -1,4 +1,4 @@
-import { useState, useMemo, lazy, Suspense } from 'react'
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react'
 import { useParams, useSearchParams, Navigate } from 'react-router-dom'
 import { useQueries } from '@tanstack/react-query'
 import { LayoutGrid, Map as MapIcon } from 'lucide-react'
@@ -7,6 +7,7 @@ import { useSourceList } from '@/hooks/use-source'
 import { useLang } from '@/lib/i18n'
 import { useGeo } from '@/lib/geo-context'
 import { itemDistance } from '@/lib/geo'
+import { trackOpen } from '@/lib/track'
 import { cn } from '@/lib/utils'
 import SearchFilter from '@/components/search-filter'
 import DataGrid from '@/components/data-grid'
@@ -78,6 +79,11 @@ export default function SourcePage() {
     return result
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, search, sortBy, detailMap, source, coords])
+
+  // click intelligence: one "opened" event per source per session
+  useEffect(() => {
+    if (source?.id) trackOpen(source.id)
+  }, [source?.id])
 
   if (!source) return <Navigate to="/" replace />
 
