@@ -23,11 +23,22 @@ export default function SourcePage() {
   const { t } = useLang()
   const [params, setParams] = useSearchParams()
   const [dialog, setDialog] = useState({ open: false, item: null, detail: null })
+  const [q, setQ] = useState(() => params.get('q') || '')
+
+  const setParam = (key, val) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (val) next.set(key, val)
+        else next.delete(key)
+        return next
+      },
+      { replace: true }
+    )
 
   const supported = source?.views ?? ['grid']
   const reqView = params.get('view')
   const view = reqView && supported.includes(reqView) ? reqView : supported.includes('grid') ? 'grid' : supported[0]
-  const search = params.get('q') || ''
   const { coords } = useGeo()
   // when located, offer (and default to) a distance sort
   const sortOptions = coords
@@ -64,9 +75,14 @@ export default function SourcePage() {
 
   const filtered = useMemo(() => {
     if (!items || !source) return []
-    const q = search.trim()
-    let result = q
-      ? items.filter((it) => source.searchFields(it).some((f) => (f || '').includes(q)))
+    // fuzzy: case-insensitive AND-match of whitespace tokens across every
+    // searchable field (name, area, address, river, …)
+    const tokens = q.trim().toLowerCase().split(/\s+/).filter(Boolean)
+    let result = tokens.length
+      ? items.filter((it) => {
+          const hay = source.searchFields(it).filter(Boolean).join(' ').toLowerCase()
+          return tokens.every((tok) => hay.includes(tok))
+        })
       : [...items]
     const cmp = {
       name: (a, b) => a.name.localeCompare(b.name, 'zh-TW'),
@@ -78,25 +94,22 @@ export default function SourcePage() {
     if (cmp) result.sort(cmp)
     return result
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, search, sortBy, detailMap, source, coords])
+  }, [items, q, sortBy, detailMap, source, coords])
 
   // click intelligence: one "opened" event per source per session
   useEffect(() => {
     if (source?.id) trackOpen(source.id)
   }, [source?.id])
 
-  if (!source) return <Navigate to="/" replace />
+  // search box stays local (smooth, IME-safe typing); reset on source switch
+  // (seed from URL deep link) and sync to the URL debounced for shareability.
+  useEffect(() => { setQ(params.get('q') || '') }, [sourceId]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const tmr = setTimeout(() => setParam('q', q), 350)
+    return () => clearTimeout(tmr)
+  }, [q]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const setParam = (key, val) =>
-    setParams(
-      (prev) => {
-        const next = new URLSearchParams(prev)
-        if (val) next.set(key, val)
-        else next.delete(key)
-        return next
-      },
-      { replace: true }
-    )
+  if (!source) return <Navigate to="/" replace />
 
   const onCardClick = (item, detail) => setDialog({ open: true, item, detail })
 
@@ -108,8 +121,8 @@ export default function SourcePage() {
         <SearchFilter
           source={source}
           sortOptions={sortOptions}
-          search={search}
-          onSearchChange={(v) => setParam('q', v)}
+          search={q}
+          onSearchChange={setQ}
           sortBy={sortBy}
           onSortChange={(v) => setParam('sort', v)}
         />
@@ -124,7 +137,7 @@ export default function SourcePage() {
                 onClick={() => setParam('view', key === 'map' ? 'map' : '')}
                 className={cn(
                   'flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium transition-all duration-300',
-                  view === key ? 'bg-primary text-primary-foreground shadow-[0_0_12px_rgba(14,165,233,0.4)]' : 'hover:text-primary'
+                  view === key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -145,9 +158,9 @@ export default function SourcePage() {
               {filtered.length} {t({ zh: '筆', en: 'items' })}
             </span>
           </div>
-          {search && (
+          {q && (
             <span className="text-muted-foreground/60">
-              FILTER: <span className="text-primary/80">{search}</span>
+              FILTER: <span className="text-primary/80">{q}</span>
             </span>
           )}
         </div>

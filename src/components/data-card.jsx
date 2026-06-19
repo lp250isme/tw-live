@@ -62,7 +62,7 @@ export default function DataCard({ source, item, onClick }) {
           {isLoading ? (
             <div className="w-[100px] h-[100px] rounded-full bg-muted/30 animate-pulse" />
           ) : hasVal ? (
-            <MetricGauge source={source} value={value} size={100} />
+            <MetricGauge source={source} value={value} size={100} max={source.gaugeMax ? source.gaugeMax(item) : source.max} />
           ) : (
             <div className="w-[100px] h-[100px] rounded-full bg-muted/30 flex items-center justify-center">
               {Icon && <Icon className="h-8 w-8 text-muted-foreground/50" />}

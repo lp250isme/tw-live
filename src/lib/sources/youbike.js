@@ -18,6 +18,7 @@ export default {
   Icon: Bike,
   unit: { zh: ' 輛', en: '' },
   gauge: 'ring',
+  gaugeMax: (it) => it.meta?.total || 30,
   views: ['map'],
   refreshMs: 60 * 1000,
 

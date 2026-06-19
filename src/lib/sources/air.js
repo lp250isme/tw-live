@@ -18,6 +18,7 @@ export default {
   Icon: Wind,
   unit: ' AQI',
   gauge: 'ring',
+  max: 200,
   views: ['map', 'grid'],
   refreshMs: 30 * 60 * 1000,
 

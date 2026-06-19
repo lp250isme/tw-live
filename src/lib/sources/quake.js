@@ -17,6 +17,7 @@ export default {
   Icon: Waves,
   unit: 'M',
   gauge: 'ring',
+  max: 7,
   views: ['map', 'grid'],
   refreshMs: 5 * 60 * 1000,
 

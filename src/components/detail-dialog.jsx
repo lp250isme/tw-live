@@ -43,7 +43,7 @@ export default function DetailDialog({ source, open, onOpenChange, item, detail 
 
           <div className="flex justify-center py-4">
             {value != null ? (
-              <MetricGauge source={source} value={value} size={160} />
+              <MetricGauge source={source} value={value} size={160} max={source.gaugeMax ? source.gaugeMax(item) : source.max} />
             ) : (
               <div className="w-40 h-40 rounded-full bg-muted flex items-center justify-center">
                 {Icon && <Icon className="h-12 w-12 text-muted-foreground" />}
