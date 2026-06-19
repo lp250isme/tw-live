@@ -40,45 +40,43 @@ function SourceTile({ source, summary, loading }) {
   return (
     <Link
       to={`/${source.id}`}
-      className="group relative flex flex-col gap-3 rounded-xl p-5 glass-card transition-all duration-200 hover:-translate-y-0.5"
+      className="group relative flex items-center gap-3.5 rounded-xl p-4 glass-card transition-all duration-200 hover:-translate-y-0.5"
       style={{ '--card-glow': withAlpha(head?.color || source.accent, 0.18), '--card-border': withAlpha(head?.color || source.accent, 0.3) }}
     >
       <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 animated-card-border" />
-      <div className="relative z-10 flex items-start justify-between">
-        <div
-          className="flex items-center justify-center w-12 h-12 rounded-xl"
-          style={{ background: withAlpha(source.accent, 0.12), border: `1px solid ${withAlpha(source.accent, 0.3)}`, color: source.accent }}
-        >
-          {Icon && <Icon className="h-6 w-6" />}
-        </div>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={onStar}
-            aria-label={fav ? t({ zh: '取消收藏', en: 'Unpin' }) : t({ zh: '加入最愛', en: 'Pin' })}
-            aria-pressed={fav}
-            className="rounded-full p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-muted/40 transition-colors"
-          >
-            <Star className="h-4 w-4" style={fav ? { fill: '#f5b301', color: '#f5b301' } : undefined} />
-          </button>
-          <ArrowRight className="h-5 w-5 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-        </div>
+      <div
+        className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+        style={{ background: withAlpha(source.accent, 0.12), border: `1px solid ${withAlpha(source.accent, 0.3)}`, color: source.accent }}
+      >
+        {Icon && <Icon className="h-6 w-6" />}
       </div>
-      <div className="relative z-10">
-        <h3 className="font-semibold text-base">{t(source.name)}</h3>
+
+      <div className="relative z-10 min-w-0 flex-1">
+        <h3 className="font-semibold text-base truncate">{t(source.name)}</h3>
         {head ? (
-          <div className="mt-1.5 flex items-center gap-1.5 text-xs min-w-0">
+          <div className="mt-0.5 flex items-center gap-1.5 text-xs min-w-0">
             <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: head.color }} aria-hidden />
             <span className="truncate font-medium text-foreground/90 tabular-nums">{head.valueText}</span>
-            {head.statusLabel && (
-              <span className="shrink-0" style={{ color: head.color }}>· {head.statusLabel}</span>
-            )}
+            {head.statusLabel && <span className="shrink-0" style={{ color: head.color }}>· {head.statusLabel}</span>}
           </div>
         ) : loading ? (
-          <div className="mt-2 h-3 w-24 rounded bg-muted/40 animate-pulse" />
+          <div className="mt-1.5 h-3 w-24 rounded bg-muted/40 animate-pulse" />
         ) : (
-          <p className="text-xs text-muted-foreground/70 mt-1">{t(source.tagline)}</p>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground/70">{t(source.tagline)}</p>
         )}
+      </div>
+
+      <div className="relative z-10 flex shrink-0 items-center gap-0.5">
+        <button
+          type="button"
+          onClick={onStar}
+          aria-label={fav ? t({ zh: '取消收藏', en: 'Unpin' }) : t({ zh: '加入最愛', en: 'Pin' })}
+          aria-pressed={fav}
+          className="rounded-full p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-muted/40 transition-colors"
+        >
+          <Star className="h-4 w-4" style={fav ? { fill: '#f5b301', color: '#f5b301' } : undefined} />
+        </button>
+        <ArrowRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
       </div>
     </Link>
   )
@@ -86,7 +84,9 @@ function SourceTile({ source, summary, loading }) {
 
 function TileGrid({ list, summary, loading }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    // items-start: tiles hug their content instead of stretching to the tallest
+    // in the row (which left a big empty gap under shorter cards).
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 items-start">
       {list.map((s) => (
         <SourceTile key={s.id} source={s} summary={summary?.[s.id]} loading={loading} />
       ))}
