@@ -13,7 +13,8 @@ export default function SummaryBar({ source, items, shown }) {
 
   const unit = unitOf(source, t)
   const extremeLabel = source.worse === 'low' ? t({ zh: '最低', en: 'Low' }) : t({ zh: '最高', en: 'High' })
-  const filtered = shown != null && shown !== s.count
+  // "showing N" only when the user has actually narrowed the list.
+  const filtered = shown != null && shown < (items?.length ?? 0)
 
   return (
     <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">

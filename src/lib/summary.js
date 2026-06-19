@@ -43,9 +43,12 @@ export function hasSeverity(source) {
 
 // Full client-side summary from the item list (source page).
 export function summarize(source, items) {
-  const valued = (items || []).filter((it) => isNum(it.value))
-  const count = valued.length
-  if (!count) return { count: 0 }
+  const all = items || []
+  const valued = all.filter((it) => isNum(it.value))
+  // count = how many rows the list shows (incl. stations with no current
+  // reading); stats below are over the valued subset.
+  const count = all.length
+  if (!valued.length) return { count }
   let min = valued[0]
   let max = valued[0]
   let sum = 0
