@@ -8,6 +8,8 @@ import { handleRiver } from './sources/river'
 import { handleQuake } from './sources/quake'
 import { handleRain } from './sources/rain'
 import { handleUV } from './sources/uv'
+import { handlePower } from './sources/power'
+import { handleOil } from './sources/oil'
 import { handleTrack, handleTrackStats } from './track'
 
 // tw-live-api — unified proxy/aggregator for Taiwan government open data.
@@ -23,6 +25,8 @@ const ROUTES = {
   '/api/quake': handleQuake,
   '/api/rain': handleRain,
   '/api/uv': handleUV,
+  '/api/power': handlePower,
+  '/api/oil': handleOil,
   '/api/track': handleTrack,
   '/api/track-stats': handleTrackStats,
 }
