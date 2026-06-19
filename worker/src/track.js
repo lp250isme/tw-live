@@ -8,7 +8,6 @@ import { withEdgeCache } from './cache'
 const VALID_SOURCES = new Set([
   'water', 'river', 'weather', 'rain', 'air', 'quake', 'uv', 'youbike', 'parking', 'power', 'oil',
 ])
-const VALID_EVENTS = new Set(['open'])
 const TTL = 90 * 24 * 60 * 60 // keep 90 days
 
 export async function handleTrack(request, ctx, env) {
@@ -21,11 +20,11 @@ export async function handleTrack(request, ctx, env) {
     return json({ error: 'bad body' }, 400)
   }
 
-  const event = String(body.event || 'open')
-  const source = String(body.source || '')
-  if (!VALID_EVENTS.has(event) || !VALID_SOURCES.has(source)) {
-    return json({ ok: false, ignored: true })
-  }
+  // Accept a batch (whole session: { sources:[...] }) or a single { source }.
+  // The client flushes once per session → one KV write covering every source.
+  const raw = Array.isArray(body.sources) ? body.sources : [body.source]
+  const sources = [...new Set(raw.map((s) => String(s || '')).filter((s) => VALID_SOURCES.has(s)))]
+  if (!sources.length) return json({ ok: false, ignored: true })
 
   // Optional GPS coords (present only if the client granted geolocation).
   const coord = (v, lim) =>
@@ -39,16 +38,16 @@ export async function handleTrack(request, ctx, env) {
     const rev = String(1e15 - now).padStart(16, '0')
     const key = `twlog:${rev}:${crypto.randomUUID().slice(0, 8)}`
     const cf = request.cf || {}
-    // coords live in metadata too (la/ln) so track-stats can collect points
-    // during the list scan without a per-key GET.
-    const metadata = { s: source, c: cf.country || 'XX' }
+    // Source list + coords live in metadata (ss/la/ln) so track-stats counts
+    // from the list scan without a per-key GET.
+    const metadata = { ss: sources, c: cf.country || 'XX' }
     if (hasGeo) {
       metadata.la = lat
       metadata.ln = lng
     }
     const write = env.TDX_KV.put(
       key,
-      JSON.stringify({ t: now, source, country: cf.country || 'XX', city: cf.city || '', ...(hasGeo ? { lat, lng } : {}) }),
+      JSON.stringify({ t: now, sources, country: cf.country || 'XX', city: cf.city || '', ...(hasGeo ? { lat, lng } : {}) }),
       { expirationTtl: TTL, metadata }
     )
     if (ctx?.waitUntil) ctx.waitUntil(write)
@@ -76,8 +75,10 @@ export function handleTrackStats(request, ctx, env) {
           const res = await env.TDX_KV.list({ prefix: 'twlog:', limit: 1000, cursor })
           for (const k of res.keys) {
             const m = k.metadata || {}
-            if (m.s) {
-              bySource[m.s] = (bySource[m.s] || 0) + 1
+            // new keys carry a source array (ss); legacy keys a single (s)
+            const ss = Array.isArray(m.ss) ? m.ss : m.s ? [m.s] : []
+            for (const s of ss) {
+              bySource[s] = (bySource[s] || 0) + 1
               total++
             }
             if (m.c) byCountry[m.c] = (byCountry[m.c] || 0) + 1
@@ -85,7 +86,7 @@ export function handleTrackStats(request, ctx, env) {
             // MAX_POINTS geocoded entries are the latest. time decoded from key.
             if (m.la != null && m.ln != null && points.length < MAX_POINTS) {
               const rev = Number(k.name.split(':')[1])
-              points.push({ lat: m.la, lng: m.ln, s: m.s, t: Number.isFinite(rev) ? 1e15 - rev : null })
+              points.push({ lat: m.la, lng: m.ln, s: ss[0], t: Number.isFinite(rev) ? 1e15 - rev : null })
             }
           }
           cursor = res.list_complete ? null : res.cursor
