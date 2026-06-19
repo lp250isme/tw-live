@@ -17,7 +17,15 @@ export default function Layout() {
         </main>
         <footer className="container mx-auto px-4 pb-10 pt-4 w-full">
           <p className="text-center text-xs text-muted-foreground/50">
-            {t({ zh: '資料來源：政府資料開放平臺 · Built by kv', en: 'Data: Taiwan Open Data · Built by kv' })}
+            {t({ zh: '資料來源：政府資料開放平臺 · ', en: 'Data: Taiwan Open Data · ' })}
+            <a
+              href="https://go.kvcc.me/home"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline-offset-2 hover:text-primary hover:underline transition-colors"
+            >
+              Built by kv
+            </a>
           </p>
         </footer>
       </div>
