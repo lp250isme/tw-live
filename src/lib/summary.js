@@ -26,7 +26,7 @@ export function unitOf(source, t) {
 
 // The tier that means "nothing to see here" for a monotonic source.
 export function bestTierKey(source) {
-  if (!source.tiers || !source.worse) return null
+  if (!source?.tiers || !source?.worse) return null
   return source.worse === 'low' ? source.tiers[source.tiers.length - 1].key : source.tiers[0].key
 }
 
@@ -38,7 +38,7 @@ export function isAbnormal(source, item) {
 
 // Whether the "alerts only" filter is meaningful for this source.
 export function hasSeverity(source) {
-  return !!(source.tiers && source.worse)
+  return !!(source?.tiers && source?.worse)
 }
 
 // Full client-side summary from the item list (source page).

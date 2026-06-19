@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, lazy, Suspense } from 'react'
 import { useParams, useSearchParams, Navigate } from 'react-router-dom'
 import { useQueries } from '@tanstack/react-query'
-import { LayoutGrid, Map as MapIcon, TriangleAlert } from 'lucide-react'
+import { LayoutGrid, Map as MapIcon, TriangleAlert, Star } from 'lucide-react'
 import { getSource } from '@/lib/sources'
 import { useSourceList } from '@/hooks/use-source'
 import { useLang } from '@/lib/i18n'
@@ -10,6 +10,7 @@ import { itemDistance } from '@/lib/geo'
 import { trackOpen } from '@/lib/track'
 import { cn, withAlpha } from '@/lib/utils'
 import { hasSeverity, isAbnormal } from '@/lib/summary'
+import { useFavorites } from '@/lib/favorites'
 import SearchFilter from '@/components/search-filter'
 import SummaryBar from '@/components/summary-bar'
 import DataList from '@/components/data-list'
@@ -50,6 +51,7 @@ export default function SourcePage() {
     : source?.sortOptions ?? []
   const sortBy = params.get('sort') || (coords ? 'distance' : source?.sortOptions?.[0]?.key || 'name')
   const onlyAlert = params.get('only') === 'alert' && hasSeverity(source)
+  const { isFav, toggle: toggleFav } = useFavorites()
 
   const { data: items, isLoading, error, refetch } = useSourceList(source ?? { id: '_none', fetchList: async () => [] })
 
@@ -166,6 +168,16 @@ export default function SourcePage() {
             <span className="hidden sm:inline">{t({ zh: '只看異常', en: 'Alerts only' })}</span>
           </button>
         )}
+        <button
+          onClick={() => toggleFav(source.id)}
+          aria-label={isFav(source.id) ? t({ zh: '取消收藏', en: 'Unpin' }) : t({ zh: '加入最愛', en: 'Pin' })}
+          aria-pressed={isFav(source.id)}
+          className="flex items-center gap-1.5 self-start rounded-full border border-primary/20 px-3.5 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          style={isFav(source.id) ? { color: '#f5b301', borderColor: withAlpha('#f5b301', 0.4), background: withAlpha('#f5b301', 0.12) } : undefined}
+        >
+          <Star className="h-3.5 w-3.5" style={isFav(source.id) ? { fill: '#f5b301' } : undefined} />
+          <span className="hidden sm:inline">{isFav(source.id) ? t({ zh: '已收藏', en: 'Pinned' }) : t({ zh: '收藏', en: 'Pin' })}</span>
+        </button>
       </div>
 
       {!isLoading && items && <SummaryBar source={source} items={items} shown={filtered.length} />}

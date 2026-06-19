@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { lockViewport } from 'viewport-lock'
 import { LangProvider } from '@/lib/i18n'
 import { GeoProvider } from '@/lib/geo-context'
+import { FavoritesProvider } from '@/lib/favorites'
 import Layout from '@/components/layout'
 import Overview from '@/pages/overview'
 import SourcePage from '@/pages/source-page'
@@ -22,14 +23,16 @@ createRoot(document.getElementById('root')).render(
   <QueryClientProvider client={queryClient}>
     <LangProvider>
       <GeoProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route index element={<Overview />} />
-              <Route path=":sourceId" element={<SourcePage />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
+        <FavoritesProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route element={<Layout />}>
+                <Route index element={<Overview />} />
+                <Route path=":sourceId" element={<SourcePage />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </FavoritesProvider>
       </GeoProvider>
     </LangProvider>
   </QueryClientProvider>

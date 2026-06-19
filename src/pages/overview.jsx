@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Star } from 'lucide-react'
 import { sources, categories } from '@/lib/sources'
 import { useLang } from '@/lib/i18n'
 import { withAlpha } from '@/lib/utils'
 import { API_BASE } from '@/lib/config'
 import { overviewHeadline } from '@/lib/summary'
+import { useFavorites } from '@/lib/favorites'
 
 // One lightweight request feeds every tile its live headline (the Worker
 // pre-aggregates all sources to ~1 KB; fetching the full lists here would be
@@ -25,8 +26,16 @@ function useSummary() {
 
 function SourceTile({ source, summary, loading }) {
   const { t } = useLang()
+  const { isFav, toggle } = useFavorites()
   const Icon = source.Icon
   const head = overviewHeadline(source, summary, t)
+  const fav = isFav(source.id)
+
+  const onStar = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toggle(source.id)
+  }
 
   return (
     <Link
@@ -42,7 +51,18 @@ function SourceTile({ source, summary, loading }) {
         >
           {Icon && <Icon className="h-6 w-6" />}
         </div>
-        <ArrowRight className="h-5 w-5 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={onStar}
+            aria-label={fav ? t({ zh: '取消收藏', en: 'Unpin' }) : t({ zh: '加入最愛', en: 'Pin' })}
+            aria-pressed={fav}
+            className="rounded-full p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-muted/40 transition-colors"
+          >
+            <Star className="h-4 w-4" style={fav ? { fill: '#f5b301', color: '#f5b301' } : undefined} />
+          </button>
+          <ArrowRight className="h-5 w-5 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+        </div>
       </div>
       <div className="relative z-10">
         <h3 className="font-semibold text-base">{t(source.name)}</h3>
@@ -64,9 +84,24 @@ function SourceTile({ source, summary, loading }) {
   )
 }
 
+function TileGrid({ list, summary, loading }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {list.map((s) => (
+        <SourceTile key={s.id} source={s} summary={summary?.[s.id]} loading={loading} />
+      ))}
+    </div>
+  )
+}
+
 export default function Overview() {
   const { t } = useLang()
   const { data: summary, isLoading } = useSummary()
+  const { favs, isFav } = useFavorites()
+
+  // Pinned sources float to a "favourites" section at the top, in pin order,
+  // and are removed from their category section below (no duplicates).
+  const pinned = favs.map((id) => sources.find((s) => s.id === id)).filter(Boolean)
 
   return (
     <div className="space-y-8">
@@ -83,17 +118,23 @@ export default function Overview() {
         </p>
       </section>
 
+      {pinned.length > 0 && (
+        <section>
+          <h3 className="flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase text-muted-foreground/60 mb-3">
+            <Star className="h-3.5 w-3.5" style={{ fill: '#f5b301', color: '#f5b301' }} />
+            {t({ zh: '我的最愛', en: 'Favourites' })}
+          </h3>
+          <TileGrid list={pinned} summary={summary} loading={isLoading} />
+        </section>
+      )}
+
       {categories.map((cat) => {
-        const inCat = sources.filter((s) => s.category === cat.id)
+        const inCat = sources.filter((s) => s.category === cat.id && !isFav(s.id))
         if (inCat.length === 0) return null
         return (
           <section key={cat.id}>
             <h3 className="text-xs font-semibold tracking-widest uppercase text-muted-foreground/60 mb-3">{t(cat.label)}</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {inCat.map((s) => (
-                <SourceTile key={s.id} source={s} summary={summary?.[s.id]} loading={isLoading} />
-              ))}
-            </div>
+            <TileGrid list={inCat} summary={summary} loading={isLoading} />
           </section>
         )
       })}
