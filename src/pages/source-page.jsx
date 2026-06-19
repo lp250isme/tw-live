@@ -1,15 +1,17 @@
 import { useState, useMemo, useEffect, lazy, Suspense } from 'react'
 import { useParams, useSearchParams, Navigate } from 'react-router-dom'
 import { useQueries } from '@tanstack/react-query'
-import { LayoutGrid, Map as MapIcon } from 'lucide-react'
+import { LayoutGrid, Map as MapIcon, TriangleAlert } from 'lucide-react'
 import { getSource } from '@/lib/sources'
 import { useSourceList } from '@/hooks/use-source'
 import { useLang } from '@/lib/i18n'
 import { useGeo } from '@/lib/geo-context'
 import { itemDistance } from '@/lib/geo'
 import { trackOpen } from '@/lib/track'
-import { cn } from '@/lib/utils'
+import { cn, withAlpha } from '@/lib/utils'
+import { hasSeverity, isAbnormal } from '@/lib/summary'
 import SearchFilter from '@/components/search-filter'
+import SummaryBar from '@/components/summary-bar'
 import DataList from '@/components/data-list'
 import LoadingSkeleton from '@/components/loading-skeleton'
 import ErrorState from '@/components/error-state'
@@ -47,6 +49,7 @@ export default function SourcePage() {
     ? [{ key: 'distance', label: { zh: '附近 近→遠', en: 'Nearest first' } }, ...(source?.sortOptions ?? [])]
     : source?.sortOptions ?? []
   const sortBy = params.get('sort') || (coords ? 'distance' : source?.sortOptions?.[0]?.key || 'name')
+  const onlyAlert = params.get('only') === 'alert' && hasSeverity(source)
 
   const { data: items, isLoading, error, refetch } = useSourceList(source ?? { id: '_none', fetchList: async () => [] })
 
@@ -86,6 +89,7 @@ export default function SourcePage() {
           return tokens.every((tok) => hay.includes(tok))
         })
       : [...items]
+    if (onlyAlert) result = result.filter((it) => isAbnormal(source, it))
     const cmp = {
       name: (a, b) => a.name.localeCompare(b.name, 'zh-TW'),
       group: (a, b) => (a.group || '').localeCompare(b.group || '', 'zh-TW'),
@@ -96,7 +100,7 @@ export default function SourcePage() {
     if (cmp) result.sort(cmp)
     return result
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, q, sortBy, detailMap, source, coords])
+  }, [items, q, sortBy, detailMap, source, coords, onlyAlert])
 
   // click intelligence: one "opened" event per source per session
   useEffect(() => {
@@ -148,25 +152,23 @@ export default function SourcePage() {
             ))}
           </div>
         )}
+        {hasSeverity(source) && (
+          <button
+            onClick={() => setParam('only', onlyAlert ? '' : 'alert')}
+            className="flex items-center gap-1.5 self-start rounded-full border px-3.5 py-2 text-xs font-medium transition-colors"
+            style={
+              onlyAlert
+                ? { color: '#ef4444', borderColor: withAlpha('#ef4444', 0.4), background: withAlpha('#ef4444', 0.12) }
+                : { borderColor: withAlpha(source.accent, 0.2) }
+            }
+          >
+            <TriangleAlert className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t({ zh: '只看異常', en: 'Alerts only' })}</span>
+          </button>
+        )}
       </div>
 
-      {!isLoading && items && (
-        <div className="flex items-center gap-4 mb-5 text-xs tracking-wider uppercase">
-          <div className="flex items-center gap-2 text-primary/70">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span>ONLINE</span>
-            <span className="text-muted-foreground">|</span>
-            <span className="text-foreground/80">
-              {filtered.length} {t({ zh: '筆', en: 'items' })}
-            </span>
-          </div>
-          {q && (
-            <span className="text-muted-foreground/60">
-              FILTER: <span className="text-primary/80">{q}</span>
-            </span>
-          )}
-        </div>
-      )}
+      {!isLoading && items && <SummaryBar source={source} items={items} shown={filtered.length} />}
 
       {isLoading ? (
         <LoadingSkeleton />
@@ -174,6 +176,12 @@ export default function SourcePage() {
         <Suspense fallback={<LoadingSkeleton />}>
           <MapView source={source} items={filtered} detailMap={detailMap} onMarkerClick={onCardClick} />
         </Suspense>
+      ) : filtered.length === 0 ? (
+        <div className="py-16 text-center text-sm text-muted-foreground">
+          {onlyAlert
+            ? t({ zh: '目前沒有需要注意的項目 👍', en: 'Nothing needs attention right now 👍' })
+            : t({ zh: '查無符合的資料', en: 'No matching results' })}
+        </div>
       ) : (
         <DataList source={source} items={filtered} onCardClick={onCardClick} />
       )}
