@@ -12,6 +12,26 @@ export default function Header({ theme }) {
   const { coords, status, request, clear } = useGeo()
   const ThemeIcon = themeIcon[theme.choice] ?? Moon
 
+  const renderLinks = () =>
+    sources.map((s) => {
+      const Icon = s.Icon
+      return (
+        <NavLink
+          key={s.id}
+          to={`/${s.id}`}
+          className={({ isActive }) =>
+            cn(
+              'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs whitespace-nowrap transition-colors',
+              isActive ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'
+            )
+          }
+        >
+          {Icon && <Icon className="h-3.5 w-3.5" />}
+          {t(s.name)}
+        </NavLink>
+      )
+    })
+
   return (
     <header className="sticky top-0 z-40 header-glass">
       <div className="absolute bottom-0 left-0 right-0 h-[1px] animated-gradient-border" />
@@ -31,26 +51,9 @@ export default function Header({ theme }) {
           </div>
         </NavLink>
 
-        {/* Source nav */}
-        <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-          {sources.map((s) => {
-            const Icon = s.Icon
-            return (
-              <NavLink
-                key={s.id}
-                to={`/${s.id}`}
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs whitespace-nowrap transition-colors',
-                    isActive ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'
-                  )
-                }
-              >
-                {Icon && <Icon className="h-3.5 w-3.5" />}
-                {t(s.name)}
-              </NavLink>
-            )
-          })}
+        {/* Source nav — inline on desktop; its own scroll row on mobile (below) */}
+        <nav className="hidden lg:flex items-center gap-1 overflow-x-auto no-scrollbar">
+          {renderLinks()}
         </nav>
 
         {/* Controls */}
@@ -85,6 +88,12 @@ export default function Header({ theme }) {
           </button>
         </div>
       </div>
+
+      {/* Mobile: source nav gets its own full-width scroll row so it isn't
+          crushed between the brand and the controls. */}
+      <nav className="lg:hidden flex items-center gap-1 overflow-x-auto no-scrollbar px-4 pb-2.5">
+        {renderLinks()}
+      </nav>
     </header>
   )
 }
