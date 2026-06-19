@@ -5,7 +5,9 @@ import { withEdgeCache } from './cache'
 // write per source-open per session (deduped client-side) — low volume, well
 // within the free tier. Aggregated on read for the kv Console. (Analytics
 // Engine would need Workers Paid, so KV is used instead.)
-const VALID_SOURCES = new Set(['water', 'air', 'weather', 'youbike', 'parking'])
+const VALID_SOURCES = new Set([
+  'water', 'river', 'weather', 'rain', 'air', 'quake', 'uv', 'youbike', 'parking', 'power', 'oil',
+])
 const VALID_EVENTS = new Set(['open'])
 const TTL = 90 * 24 * 60 * 60 // keep 90 days
 
