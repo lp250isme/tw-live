@@ -1,5 +1,4 @@
 import { Outlet } from 'react-router-dom'
-import MoreByKv from 'more-by-kv'
 import AnimatedBackground from '@/components/animated-background'
 import Header from '@/components/header'
 import { useTheme } from '@/lib/theme'
@@ -7,7 +6,7 @@ import { useLang } from '@/lib/i18n'
 
 export default function Layout() {
   const theme = useTheme()
-  const { lang, t } = useLang()
+  const { t } = useLang()
   return (
     <div className="min-h-screen bg-background relative">
       <AnimatedBackground />
@@ -16,9 +15,8 @@ export default function Layout() {
         <main className="container mx-auto px-4 py-6 flex-1 w-full">
           <Outlet />
         </main>
-        <footer className="container mx-auto px-4 pb-10 pt-4 max-w-3xl w-full">
-          <MoreByKv exclude={['tw-live']} lang={lang} theme={theme.resolved} />
-          <p className="text-center text-xs text-muted-foreground/50 mt-8">
+        <footer className="container mx-auto px-4 pb-10 pt-4 w-full">
+          <p className="text-center text-xs text-muted-foreground/50">
             {t({ zh: '資料來源：政府資料開放平臺 · Built by kv', en: 'Data: Taiwan Open Data · Built by kv' })}
           </p>
         </footer>

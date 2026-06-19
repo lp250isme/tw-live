@@ -11,7 +11,7 @@ async function fetchList() {
 
 export default {
   id: 'weather',
-  category: 'environment',
+  category: 'weather',
   name: { zh: '天氣', en: 'Weather' },
   tagline: { zh: '全台氣象站即時氣溫', en: 'Live temperature across weather stations' },
   accent: '#f59e0b',

@@ -11,7 +11,7 @@ async function fetchList() {
 
 export default {
   id: 'air',
-  category: 'environment',
+  category: 'env',
   name: { zh: '空氣品質', en: 'Air Quality' },
   tagline: { zh: '全台測站即時 AQI 空氣品質指標', en: 'Live AQI across Taiwan monitoring stations' },
   accent: '#34d399',

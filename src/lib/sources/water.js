@@ -13,7 +13,7 @@ async function fetchList() {
 
 export default {
   id: 'water',
-  category: 'environment',
+  category: 'water',
   name: { zh: '水庫水位', en: 'Reservoirs' },
   tagline: { zh: '全台主要水庫即時蓄水率', en: 'Real-time storage of major reservoirs' },
   accent: '#0ea5e9',

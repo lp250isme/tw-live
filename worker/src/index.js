@@ -4,6 +4,9 @@ import { handleYouBike } from './sources/youbike'
 import { handleAir } from './sources/air'
 import { handleWeather } from './sources/weather'
 import { handleParking } from './sources/parking'
+import { handleQuake } from './sources/quake'
+import { handleRain } from './sources/rain'
+import { handleUV } from './sources/uv'
 import { handleTrack, handleTrackStats } from './track'
 
 // tw-live-api — unified proxy/aggregator for Taiwan government open data.
@@ -15,6 +18,9 @@ const ROUTES = {
   '/api/air': handleAir,
   '/api/weather': handleWeather,
   '/api/parking': handleParking,
+  '/api/quake': handleQuake,
+  '/api/rain': handleRain,
+  '/api/uv': handleUV,
   '/api/track': handleTrack,
   '/api/track-stats': handleTrackStats,
 }

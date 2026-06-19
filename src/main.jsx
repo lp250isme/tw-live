@@ -7,7 +7,6 @@ import { GeoProvider } from '@/lib/geo-context'
 import Layout from '@/components/layout'
 import Overview from '@/pages/overview'
 import SourcePage from '@/pages/source-page'
-import 'more-by-kv/styles.css'
 import './index.css'
 
 // Block pinch / double-tap zoom on mobile while keeping scroll (family-wide).
