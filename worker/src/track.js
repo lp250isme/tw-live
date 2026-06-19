@@ -27,15 +27,29 @@ export async function handleTrack(request, ctx, env) {
     return json({ ok: false, ignored: true })
   }
 
+  // Optional GPS coords (present only if the client granted geolocation).
+  const coord = (v, lim) =>
+    typeof v === 'number' && Number.isFinite(v) && Math.abs(v) <= lim ? Math.round(v * 1e5) / 1e5 : null
+  const lat = coord(body.lat, 90)
+  const lng = coord(body.lng, 180)
+  const hasGeo = lat != null && lng != null
+
   if (env.TDX_KV) {
     const now = Date.now()
     const rev = String(1e15 - now).padStart(16, '0')
     const key = `twlog:${rev}:${crypto.randomUUID().slice(0, 8)}`
     const cf = request.cf || {}
+    // coords live in metadata too (la/ln) so track-stats can collect points
+    // during the list scan without a per-key GET.
+    const metadata = { s: source, c: cf.country || 'XX' }
+    if (hasGeo) {
+      metadata.la = lat
+      metadata.ln = lng
+    }
     const write = env.TDX_KV.put(
       key,
-      JSON.stringify({ t: now, source, country: cf.country || 'XX', city: cf.city || '' }),
-      { expirationTtl: TTL, metadata: { s: source, c: cf.country || 'XX' } }
+      JSON.stringify({ t: now, source, country: cf.country || 'XX', city: cf.city || '', ...(hasGeo ? { lat, lng } : {}) }),
+      { expirationTtl: TTL, metadata }
     )
     if (ctx?.waitUntil) ctx.waitUntil(write)
     else await write
@@ -53,24 +67,31 @@ export function handleTrackStats(request, ctx, env) {
     async () => {
       const bySource = {}
       const byCountry = {}
+      const points = []
+      const MAX_POINTS = 500
       let total = 0
       if (env.TDX_KV) {
         let cursor
         do {
           const res = await env.TDX_KV.list({ prefix: 'twlog:', limit: 1000, cursor })
           for (const k of res.keys) {
-            const s = k.metadata?.s
-            const c = k.metadata?.c
-            if (s) {
-              bySource[s] = (bySource[s] || 0) + 1
+            const m = k.metadata || {}
+            if (m.s) {
+              bySource[m.s] = (bySource[m.s] || 0) + 1
               total++
             }
-            if (c) byCountry[c] = (byCountry[c] || 0) + 1
+            if (m.c) byCountry[m.c] = (byCountry[m.c] || 0) + 1
+            // keys sort most-recent-first (rev = 1e15 - now), so the first
+            // MAX_POINTS geocoded entries are the latest. time decoded from key.
+            if (m.la != null && m.ln != null && points.length < MAX_POINTS) {
+              const rev = Number(k.name.split(':')[1])
+              points.push({ lat: m.la, lng: m.ln, s: m.s, t: Number.isFinite(rev) ? 1e15 - rev : null })
+            }
           }
           cursor = res.list_complete ? null : res.cursor
         } while (cursor)
       }
-      return { app: 'tw-live', total, bySource, byCountry, generatedAt: new Date().toISOString() }
+      return { app: 'tw-live', total, bySource, byCountry, points, generatedAt: new Date().toISOString() }
     },
     ctx
   )

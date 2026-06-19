@@ -104,9 +104,11 @@ export default function SourcePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, q, sortBy, detailMap, source, coords, onlyAlert])
 
-  // click intelligence: one "opened" event per source per session
+  // click intelligence: one "opened" event per source per session. coords (if
+  // the user already granted geolocation) ride along for the Console map.
   useEffect(() => {
-    if (source?.id) trackOpen(source.id)
+    if (source?.id) trackOpen(source.id, coords)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source?.id])
 
   // search box stays local (smooth, IME-safe typing); reset on source switch
