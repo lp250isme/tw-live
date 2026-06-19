@@ -31,7 +31,22 @@ export default function SourcePage() {
   const [dialog, setDialog] = useState({ open: false, item: null, detail: null })
   const [q, setQ] = useState(() => params.get('q') || '')
 
-  const setParam = (key, val) =>
+  // Remember view/sort across visits (URL param wins, then last choice).
+  const pref = (k) => {
+    try {
+      return localStorage.getItem(`twlive-${k}`) || ''
+    } catch {
+      return ''
+    }
+  }
+  const setParam = (key, val) => {
+    if (key === 'view' || key === 'sort') {
+      try {
+        val ? localStorage.setItem(`twlive-${key}`, val) : localStorage.removeItem(`twlive-${key}`)
+      } catch {
+        /* ignore */
+      }
+    }
     setParams(
       (prev) => {
         const next = new URLSearchParams(prev)
@@ -41,16 +56,22 @@ export default function SourcePage() {
       },
       { replace: true }
     )
+  }
 
   const supported = source?.views ?? ['grid']
-  const reqView = params.get('view')
+  const reqView = params.get('view') || pref('view')
   const view = reqView && supported.includes(reqView) ? reqView : supported.includes('grid') ? 'grid' : supported[0]
   const { coords } = useGeo()
   // when located, offer (and default to) a distance sort
   const sortOptions = coords
     ? [{ key: 'distance', label: { zh: '附近 近→遠', en: 'Nearest first' } }, ...(source?.sortOptions ?? [])]
     : source?.sortOptions ?? []
-  const sortBy = params.get('sort') || (coords ? 'distance' : source?.sortOptions?.[0]?.key || 'name')
+  const sortKeys = sortOptions.map((o) => o.key)
+  const storedSort = pref('sort')
+  const sortBy =
+    params.get('sort') ||
+    (sortKeys.includes(storedSort) ? storedSort : '') ||
+    (coords ? 'distance' : source?.sortOptions?.[0]?.key || 'name')
   const onlyAlert = params.get('only') === 'alert' && hasSeverity(source)
   const { isFav, toggle: toggleFav } = useFavorites()
 
