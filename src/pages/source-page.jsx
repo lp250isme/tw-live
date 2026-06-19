@@ -11,11 +11,13 @@ import { trackOpen } from '@/lib/track'
 import { cn } from '@/lib/utils'
 import SearchFilter from '@/components/search-filter'
 import DataGrid from '@/components/data-grid'
-import DetailDialog from '@/components/detail-dialog'
 import LoadingSkeleton from '@/components/loading-skeleton'
 import ErrorState from '@/components/error-state'
 
 const MapView = lazy(() => import('@/components/map-view'))
+// Deferred until the first card click — keeps radix-dialog out of the initial
+// source-page bundle (the dialog is only ever shown on demand).
+const DetailDialog = lazy(() => import('@/components/detail-dialog'))
 
 export default function SourcePage() {
   const { sourceId } = useParams()
@@ -176,13 +178,17 @@ export default function SourcePage() {
         <DataGrid source={source} items={filtered} onCardClick={onCardClick} />
       )}
 
-      <DetailDialog
-        source={source}
-        open={dialog.open}
-        onOpenChange={(o) => setDialog((d) => ({ ...d, open: o }))}
-        item={dialog.item}
-        detail={dialog.detail}
-      />
+      {dialog.item && (
+        <Suspense fallback={null}>
+          <DetailDialog
+            source={source}
+            open={dialog.open}
+            onOpenChange={(o) => setDialog((d) => ({ ...d, open: o }))}
+            item={dialog.item}
+            detail={dialog.detail}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }
