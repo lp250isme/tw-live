@@ -2,7 +2,6 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { X, MapPin } from 'lucide-react'
 import { useLang } from '@/lib/i18n'
 import MetricGauge from './metric-gauge'
-import TrendChart from './trend-chart'
 
 function InfoRow({ icon: Icon, label, value }) {
   return (
@@ -56,12 +55,6 @@ export default function DetailDialog({ source, open, onOpenChange, item, detail 
               {fields.map((f, i) => (
                 <InfoRow key={i} icon={f.icon} label={t(f.label)} value={f.value} />
               ))}
-            </div>
-          )}
-
-          {source.chart && typeof source.fetchTrend === 'function' && (
-            <div className="mt-4">
-              <TrendChart source={source} item={item} />
             </div>
           )}
         </Dialog.Content>

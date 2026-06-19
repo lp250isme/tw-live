@@ -17,7 +17,6 @@ export default defineConfig({
         manualChunks: {
           router: ['react-router-dom'],
           query: ['@tanstack/react-query'],
-          charts: ['recharts'],
         },
       },
     },
