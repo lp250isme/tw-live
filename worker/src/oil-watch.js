@@ -1,5 +1,16 @@
 import { handleOil } from './sources/oil'
 import { pushToAll } from './push'
+import { json } from './cors'
+
+// HTTP entry for the check (called by the shortlink worker's daily cron, since
+// this account is at its cron-trigger limit). Lightly gated by a shared key.
+export async function handleOilCron(request, ctx, env) {
+  if (env.OIL_CRON_KEY && request.headers.get('x-cron-key') !== env.OIL_CRON_KEY) {
+    return json({ error: 'forbidden' }, 403)
+  }
+  await checkOilUpdate(env, ctx)
+  return json({ ok: true })
+}
 
 const SHORT = { '92無鉛汽油': '92', '95無鉛汽油': '95', '98無鉛汽油': '98', '超級柴油': '柴油' }
 

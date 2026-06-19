@@ -7,8 +7,8 @@
   // KV: TDX OAuth token (~1 write/day) + low-volume click-intel events (twlog:*,
   // one write per source-open per session). Data responses use Cache API.
   "kv_namespaces": [{ "binding": "TDX_KV", "id": "d18c85d33c0f46f989427f3b87972ea1" }],
-  // Daily fuel-price-change check → Web Push to subscribers (06:22 Taipei).
-  "triggers": { "crons": ["22 22 * * *"] },
+  // No own cron trigger — the account is at the 5-cron free-tier limit, so the
+  // shortlink worker's existing daily cron pings /api/cron/oil-check instead.
   // Custom domain (provisioned on deploy; kvcc.me zone is on this account).
   // Comment out for the first workers.dev-only deploy if the zone isn't ready.
   "routes": [{ "pattern": "live-api.kvcc.me", "custom_domain": true }]
