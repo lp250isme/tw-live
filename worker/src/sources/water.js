@@ -29,7 +29,9 @@ function stripControlChars(text) {
 }
 
 async function fetchWraJSON(url) {
-  const r = await fetch(url, { headers: WRA_HEADERS, cf: { cacheTtl: 0 } })
+  // WRA's edge occasionally throws transient 520 — retry once.
+  let r = await fetch(url, { headers: WRA_HEADERS, cf: { cacheTtl: 0 } })
+  if (!r.ok) r = await fetch(url, { headers: WRA_HEADERS, cf: { cacheTtl: 0 } })
   if (!r.ok) throw new Error(`WRA upstream ${r.status}`)
   const text = await r.text()
   return JSON.parse(stripControlChars(text))
