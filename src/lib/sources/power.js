@@ -23,6 +23,7 @@ export default {
   views: ['grid'],
   refreshMs: 10 * 60 * 1000,
 
+  worse: 'low',
   tiers: [
     { lt: 6, key: 'alert' },
     { lt: 10, key: 'tight' },

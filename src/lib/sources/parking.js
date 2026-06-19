@@ -22,11 +22,16 @@ export default {
   views: ['map', 'grid'],
   refreshMs: 60 * 1000,
 
+  worse: 'low',
   tiers: [
     { lt: 1, key: 'full' },
     { lt: 20, key: 'low' },
     { key: 'available' },
   ],
+  // City-wide total of free spaces beats a single "fullest lot".
+  overview: (s, { t }) => ({
+    valueText: t({ zh: `共 ${s.sum.toLocaleString()} 位空位`, en: `${s.sum.toLocaleString()} spaces free` }),
+  }),
   tierMeta: {
     full: { label: { zh: '已滿', en: 'Full' }, color: '#ef4444' },
     low: { label: { zh: '剩少', en: 'Few' }, color: '#f97316' },

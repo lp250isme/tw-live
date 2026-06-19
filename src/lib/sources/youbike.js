@@ -22,11 +22,16 @@ export default {
   views: ['map'],
   refreshMs: 60 * 1000,
 
+  worse: 'low',
   tiers: [
     { lt: 1, key: 'empty' },
     { lt: 6, key: 'low' },
     { key: 'ok' },
   ],
+  // City-wide total of bikes available beats a single "emptiest station".
+  overview: (s, { t }) => ({
+    valueText: t({ zh: `共 ${s.sum.toLocaleString()} 輛可借`, en: `${s.sum.toLocaleString()} bikes available` }),
+  }),
   tierMeta: {
     empty: { label: { zh: '無車可借', en: 'Empty' }, color: '#ef4444' },
     low: { label: { zh: '車輛偏少', en: 'Low' }, color: '#f97316' },

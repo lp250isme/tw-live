@@ -23,6 +23,7 @@ export default {
   views: ['grid', 'map'],
   refreshMs: 30 * 60 * 1000,
 
+  worse: 'low',
   tiers: [
     { lt: 10, key: 'critical' },
     { lt: 20, key: 'warning' },

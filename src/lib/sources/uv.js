@@ -21,6 +21,7 @@ export default {
   views: ['map', 'grid'],
   refreshMs: 60 * 60 * 1000,
 
+  worse: 'high',
   tiers: [
     { lt: 3, key: 'low' },
     { lt: 6, key: 'moderate' },

@@ -23,6 +23,7 @@ export default {
   refreshMs: 30 * 60 * 1000,
 
   // higher AQI = worse; official Taiwan bands
+  worse: 'high',
   tiers: [
     { lt: 51, key: 'good' },
     { lt: 101, key: 'moderate' },
