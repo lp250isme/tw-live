@@ -10,7 +10,7 @@ import { itemDistance } from '@/lib/geo'
 import { trackOpen } from '@/lib/track'
 import { cn } from '@/lib/utils'
 import SearchFilter from '@/components/search-filter'
-import DataGrid from '@/components/data-grid'
+import DataList from '@/components/data-list'
 import LoadingSkeleton from '@/components/loading-skeleton'
 import ErrorState from '@/components/error-state'
 
@@ -175,7 +175,7 @@ export default function SourcePage() {
           <MapView source={source} items={filtered} detailMap={detailMap} onMarkerClick={onCardClick} />
         </Suspense>
       ) : (
-        <DataGrid source={source} items={filtered} onCardClick={onCardClick} />
+        <DataList source={source} items={filtered} onCardClick={onCardClick} />
       )}
 
       {dialog.item && (
