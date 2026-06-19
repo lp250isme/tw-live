@@ -38,6 +38,22 @@ gauge('fill'|'ring'), max 或 gaugeMax(item)（比例弧分母）, views(['grid'
 refreshMs, tiers[{lt,key}], tierMeta{key:{label,color}}, formatValue, metricLabel,
 searchFields(it)→[...含地址], sortOptions[{key,label}], hasDetail, fetchList, detailFields(item)`。
 tier 由 `getTier(value, tiers)` 算（low-is-bad 或 high-is-bad 靠 tiers 排序）。
+- **`worse: 'high'|'low'`（必填，若有 tiers 且單調）**：哪個極值是「該注意」的，決定
+  ① 首頁/彙總列秀 max 還是 min ② 「只看異常」的 all-clear tier（high→tiers[0]、low→末項）。
+  **weather 的 tier 非單調（冷↔熱兩端極端）、river/oil 無 tier → 不要標 `worse`**
+  （→ 無「只看異常」、headline 改顯示範圍 min–max）。`src/lib/summary.js` 是唯一判斷處。
+- **`overview(summary,{t})`（選填）**：覆寫首頁 tile headline 文案（youbike/parking 用
+  `summary.sum` 顯示「共 X 可借/空位」）；不填走通用（worse 極值 + getTier 上色，或範圍）。
+
+### 呈現模型（2026-06 改版：戰情室化）
+- **首頁 = 即時 console**：`overview.jsx` 抓 worker `/api/summary`（一次 ~1KB，**別**抓 11 個
+  完整清單＝~143KB），每 tile 顯示即時 headline + 狀態色點。`overviewHeadline()` 在 summary.js。
+- **源頁 = 彙總列 + 密集列表**：`<SummaryBar>`（count·多數狀態·極值/範圍·N需注意）在最上；
+  `<DataList>`/`<DataRow>` 一行一站（點/名/距離/比例條/值/徽章），一螢幕 8-12 筆。
+  **環形 gauge 只在點開的 detail dialog 當主角**（清單不再用大 gauge 卡）。
+- **「只看異常」**：源頁 toggle（`?only=alert`，僅 `hasSeverity`=有 tiers+worse 的源顯示），
+  用 `isAbnormal()` 濾掉 all-clear tier。`src/lib/summary.js`：summarize/overviewHeadline/
+  bestTierKey/isAbnormal/hasSeverity。
 
 ### 目前 11 源（src/lib/sources/）
 water·river(WRA)｜weather·rain·uv·quake(CWA)｜air(MOENV)｜youbike·parking(TDX/blob)｜power(台電)｜oil(中油)。
@@ -48,6 +64,9 @@ water·river(WRA)｜weather·rain·uv·quake(CWA)｜air(MOENV)｜youbike·parkin
   WRA 的 **TWD97→WGS84** 逆投影）。CWA key 從 `env.CWA_KEY`（無則公開示範 key）。
 - `cache.js withEdgeCache`：**fresh(TTL) + stale(24h) 雙層**；上游失敗回 stale，
   暫時性 5xx 不變使用者錯誤。**零 KV 寫入**（KV 只存 TDX OAuth token，≈1 寫/日）。
+- `summary.js`：`/api/summary` 聚合端點——呼叫 11 個 list handler→`.json()`→**通用數值 reduce**
+  （count/sum/mean/min/max，不碰 tier，避免與前端 config 漂移），整包 `withEdgeCache('summary',300)`。
+  首頁吃它（~1KB，**別**讓首頁抓 11 個完整清單＝~143KB）。**新增源時 `LIST_HANDLERS` 要加一筆。**
 - `track.js`：`/api/track` 點擊情報寫 KV `twlog:*`（每 session 每源一次）、
   `/api/track-stats` 聚合；go.kvcc.me Console 的「TW Live」分頁讀它。
 - secrets：`CWA_KEY`、`MOENV_KEY`(選)、`TDX_CLIENT_ID/SECRET`（`wrangler secret put`）。
