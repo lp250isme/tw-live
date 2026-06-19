@@ -12,6 +12,8 @@ import { handlePower } from './sources/power'
 import { handleOil } from './sources/oil'
 import { handleSummary } from './summary'
 import { handleTrack, handleTrackStats } from './track'
+import { handlePushSubscribe, handlePushTest } from './push'
+import { checkOilUpdate } from './oil-watch'
 
 // tw-live-api — unified proxy/aggregator for Taiwan government open data.
 // Holds upstream API keys (later sources), normalizes responses, adds CORS, and
@@ -29,6 +31,8 @@ const ROUTES = {
   '/api/power': handlePower,
   '/api/oil': handleOil,
   '/api/summary': handleSummary,
+  '/api/push/subscribe': handlePushSubscribe,
+  '/api/push/test': handlePushTest,
   '/api/track': handleTrack,
   '/api/track-stats': handleTrackStats,
 }
@@ -52,5 +56,10 @@ export default {
     } catch (err) {
       return json({ error: String(err?.message || err) }, 502)
     }
+  },
+
+  // Daily: detect a CPC fuel-price change and push it to subscribers.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(checkOilUpdate(env, ctx))
   },
 }

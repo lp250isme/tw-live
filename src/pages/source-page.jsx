@@ -13,6 +13,7 @@ import { hasSeverity, isAbnormal } from '@/lib/summary'
 import { useFavorites } from '@/lib/favorites'
 import SearchFilter from '@/components/search-filter'
 import SummaryBar from '@/components/summary-bar'
+import OilNotify from '@/components/oil-notify'
 import DataList from '@/components/data-list'
 import LoadingSkeleton from '@/components/loading-skeleton'
 import ErrorState from '@/components/error-state'
@@ -183,6 +184,8 @@ export default function SourcePage() {
       </div>
 
       {!isLoading && items && <SummaryBar source={source} items={items} shown={filtered.length} />}
+
+      {source.id === 'oil' && <OilNotify />}
 
       {isLoading ? (
         <LoadingSkeleton />
