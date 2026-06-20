@@ -19,7 +19,7 @@
     "clsx": "^2.1.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.468.0",
-    "more-by-kv": "github:lp250isme/more-by-kv#3b55f90d47c14d8706f74c0a927303e0961fa505",
+    "more-by-kv": "github:lp250isme/more-by-kv#0a0c3e14fe43dfa256cbfce2cc195ded24aac6f8",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-leaflet": "^5.0.0",
