@@ -17,6 +17,7 @@ export default {
   Icon: Fuel,
   unit: '元/L',
   gauge: 'ring',
+  detailGauge: 'stat',
   max: 45,
   views: ['grid'],
   refreshMs: 60 * 60 * 1000,

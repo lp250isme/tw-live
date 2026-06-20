@@ -158,50 +158,54 @@ export default function SourcePage() {
           sortBy={sortBy}
           onSortChange={(v) => setParam('sort', v)}
         />
-        {supported.length > 1 && (
-          <div className="flex rounded-full border border-primary/20 p-0.5 neon-toggle self-start">
-            {[
-              { key: 'grid', Icon: LayoutGrid, label: { zh: '列表', en: 'Grid' } },
-              { key: 'map', Icon: MapIcon, label: { zh: '地圖', en: 'Map' } },
-            ].filter(({ key }) => supported.includes(key)).map(({ key, Icon, label }) => (
-              <button
-                key={key}
-                onClick={() => setParam('view', key === 'map' ? 'map' : '')}
-                className={cn(
-                  'flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium transition-all duration-300',
-                  view === key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{t(label)}</span>
-              </button>
-            ))}
-          </div>
-        )}
-        {hasSeverity(source) && (
+        {/* Action buttons stay on one row even on mobile (they're icon-only
+            there) — never stack view-toggle / alert / favourite vertically. */}
+        <div className="flex items-center gap-2 self-start">
+          {supported.length > 1 && (
+            <div className="flex rounded-full border border-primary/20 p-0.5 neon-toggle">
+              {[
+                { key: 'grid', Icon: LayoutGrid, label: { zh: '列表', en: 'Grid' } },
+                { key: 'map', Icon: MapIcon, label: { zh: '地圖', en: 'Map' } },
+              ].filter(({ key }) => supported.includes(key)).map(({ key, Icon, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setParam('view', key === 'map' ? 'map' : '')}
+                  className={cn(
+                    'flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium transition-all duration-300',
+                    view === key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{t(label)}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {hasSeverity(source) && (
+            <button
+              onClick={() => setParam('only', onlyAlert ? '' : 'alert')}
+              className="flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-medium transition-colors"
+              style={
+                onlyAlert
+                  ? { color: '#ef4444', borderColor: withAlpha('#ef4444', 0.4), background: withAlpha('#ef4444', 0.12) }
+                  : { borderColor: withAlpha(source.accent, 0.2) }
+              }
+            >
+              <TriangleAlert className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{t({ zh: '只看異常', en: 'Alerts only' })}</span>
+            </button>
+          )}
           <button
-            onClick={() => setParam('only', onlyAlert ? '' : 'alert')}
-            className="flex items-center gap-1.5 self-start rounded-full border px-3.5 py-2 text-xs font-medium transition-colors"
-            style={
-              onlyAlert
-                ? { color: '#ef4444', borderColor: withAlpha('#ef4444', 0.4), background: withAlpha('#ef4444', 0.12) }
-                : { borderColor: withAlpha(source.accent, 0.2) }
-            }
+            onClick={() => toggleFav(source.id)}
+            aria-label={isFav(source.id) ? t({ zh: '取消收藏', en: 'Unpin' }) : t({ zh: '加入最愛', en: 'Pin' })}
+            aria-pressed={isFav(source.id)}
+            className="flex items-center gap-1.5 rounded-full border border-primary/20 px-3.5 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+            style={isFav(source.id) ? { color: '#f5b301', borderColor: withAlpha('#f5b301', 0.4), background: withAlpha('#f5b301', 0.12) } : undefined}
           >
-            <TriangleAlert className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{t({ zh: '只看異常', en: 'Alerts only' })}</span>
+            <Star className="h-3.5 w-3.5" style={isFav(source.id) ? { fill: '#f5b301' } : undefined} />
+            <span className="hidden sm:inline">{isFav(source.id) ? t({ zh: '已收藏', en: 'Pinned' }) : t({ zh: '收藏', en: 'Pin' })}</span>
           </button>
-        )}
-        <button
-          onClick={() => toggleFav(source.id)}
-          aria-label={isFav(source.id) ? t({ zh: '取消收藏', en: 'Unpin' }) : t({ zh: '加入最愛', en: 'Pin' })}
-          aria-pressed={isFav(source.id)}
-          className="flex items-center gap-1.5 self-start rounded-full border border-primary/20 px-3.5 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-          style={isFav(source.id) ? { color: '#f5b301', borderColor: withAlpha('#f5b301', 0.4), background: withAlpha('#f5b301', 0.12) } : undefined}
-        >
-          <Star className="h-3.5 w-3.5" style={isFav(source.id) ? { fill: '#f5b301' } : undefined} />
-          <span className="hidden sm:inline">{isFav(source.id) ? t({ zh: '已收藏', en: 'Pinned' }) : t({ zh: '收藏', en: 'Pin' })}</span>
-        </button>
+        </div>
       </div>
 
       {!isLoading && items && <SummaryBar source={source} items={items} shown={filtered.length} />}

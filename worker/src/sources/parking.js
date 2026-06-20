@@ -42,7 +42,15 @@ async function buildCity(env, city) {
 
 async function build(env) {
   const results = await Promise.allSettled(CITIES.map((c) => buildCity(env, c)))
-  const items = results.filter((r) => r.status === 'fulfilled').flatMap((r) => r.value)
+  const ok = results.filter((r) => r.status === 'fulfilled')
+  // If *every* city failed, throw so withEdgeCache serves stale (or the client
+  // retries) instead of caching an empty list as a "successful" response —
+  // that's what made parking silently show "no results" on a transient TDX
+  // hiccup, then keep showing it until the empty cache entry expired.
+  if (ok.length === 0) {
+    throw new Error(`parking: all upstream failed — ${results.map((r) => r.reason?.message || r.reason).join('; ')}`)
+  }
+  const items = ok.flatMap((r) => r.value)
   return items.filter((x) => x.value != null).sort((a, b) => (b.value ?? -1) - (a.value ?? -1))
 }
 

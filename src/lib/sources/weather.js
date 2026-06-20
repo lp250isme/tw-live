@@ -18,6 +18,7 @@ export default {
   Icon: CloudSun,
   unit: '°C',
   gauge: 'ring',
+  detailGauge: 'spectrum',
   max: 40,
   views: ['map', 'grid'],
   refreshMs: 10 * 60 * 1000,

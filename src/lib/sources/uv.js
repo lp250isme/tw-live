@@ -17,6 +17,7 @@ export default {
   Icon: Sun,
   unit: '',
   gauge: 'ring',
+  detailGauge: 'scale',
   max: 11,
   views: ['map', 'grid'],
   refreshMs: 60 * 60 * 1000,

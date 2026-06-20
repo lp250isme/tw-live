@@ -18,6 +18,7 @@ export default {
   Icon: SquareParking,
   unit: { zh: ' 位', en: '' },
   gauge: 'ring',
+  detailGauge: 'radial',
   gaugeMax: (it) => it.meta?.total || 100,
   views: ['map', 'grid'],
   refreshMs: 60 * 1000,

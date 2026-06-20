@@ -17,6 +17,7 @@ export default {
   Icon: CloudRain,
   unit: 'mm',
   gauge: 'ring',
+  detailGauge: 'scale',
   max: 50,
   views: ['map', 'grid'],
   refreshMs: 10 * 60 * 1000,

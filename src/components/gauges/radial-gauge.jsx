@@ -1,31 +1,25 @@
-import { getTier } from '@/lib/tier'
-import { useLang } from '@/lib/i18n'
-
-// Radial gauge: a hairline track + a tier-coloured arc whose length is
-// proportional to value / max (so the ring actually conveys "how much" for
-// every source, not just percentages). A bold tabular number sits in the
-// centre, unit below, tier label beneath. When no max is known the ring is a
-// full framing circle.
+// Proportional radial gauge — for sources where value/max is genuinely "how
+// full" (water %, bike availability, parking spaces, power reserve). The arc
+// length encodes the ratio; count ratios show "n / total" in the centre.
 const R = 52
 const C = 2 * Math.PI * R
 
-export default function MetricGauge({ source, value = 0, size = 120, max = null }) {
-  const { t } = useLang()
-  const tier = getTier(value, source.tiers)
-  const meta = (tier && source.tierMeta?.[tier]) || { color: source.accent || '#7c7dff', label: source.metricLabel }
-  const color = meta.color
-  const unit = typeof source.unit === 'string' ? source.unit : t(source.unit)
-  const display = source.formatValue ? source.formatValue(value) : String(value ?? '--')
-  const label = t(meta.label)
-
+export default function RadialGauge({ source, value, item, color, label, display, unit, size = 160 }) {
   const isFill = source.gauge === 'fill'
+  const max = source.gaugeMax ? source.gaugeMax(item) : source.max
   const m = max ?? (isFill ? 100 : null)
   const ratio = m && m > 0 ? Math.max(0, Math.min(1, (value ?? 0) / m)) : null
   const dash = ratio != null ? ratio * C : C
 
-  const big = size >= 140
-  const len = display.length
-  const numSize = len > 4 ? (big ? 30 : 22) : len > 2 ? (big ? 40 : 28) : big ? 48 : 32
+  // Count ratios (bikes / parking) read better as "12 / 30"; % sources keep %.
+  const total = source.gaugeMax ? source.gaugeMax(item) : null
+  const isCount = total != null && unit !== '%'
+  const sub = isCount ? `/ ${total}` : unit
+  const pct = ratio != null ? Math.round(ratio * 100) : null
+
+  // Keep the readout clear of the ring — scale down as the number gets longer.
+  const len = String(display).length
+  const numSize = len >= 6 ? 26 : len === 5 ? 30 : len === 4 ? 34 : len === 3 ? 40 : 46
 
   return (
     <div className="relative flex flex-col items-center">
@@ -42,20 +36,22 @@ export default function MetricGauge({ source, value = 0, size = 120, max = null 
           style={{ transition: 'stroke-dasharray .5s ease', opacity: ratio == null ? 0.85 : 1 }}
         />
         <text
-          x="60" y={unit ? 55 : 62}
+          x="60" y={sub ? 55 : 62}
           textAnchor="middle" dominantBaseline="middle"
           className="fill-foreground tabular-nums"
           fontSize={numSize} fontWeight="700" style={{ letterSpacing: '-0.03em' }}
         >
           {display}
         </text>
-        {unit && (
+        {sub && (
           <text x="60" y="80" textAnchor="middle" dominantBaseline="middle" className="fill-muted-foreground font-medium" fontSize="11">
-            {unit}
+            {sub}
           </text>
         )}
       </svg>
-      <span className="text-xs font-medium mt-1" style={{ color }}>{label}</span>
+      <span className="mt-1 text-xs font-medium" style={{ color }}>
+        {label}{isFill && pct != null ? ` · ${pct}%` : ''}
+      </span>
     </div>
   )
 }

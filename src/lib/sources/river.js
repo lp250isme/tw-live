@@ -19,6 +19,7 @@ export default {
   Icon: Droplet,
   unit: 'm',
   gauge: 'ring',
+  detailGauge: 'threshold',
   views: ['map', 'grid'],
   refreshMs: 10 * 60 * 1000,
 

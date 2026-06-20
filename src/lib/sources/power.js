@@ -19,6 +19,7 @@ export default {
   Icon: Zap,
   unit: '%',
   gauge: 'ring',
+  detailGauge: 'radial',
   max: 20,
   views: ['grid'],
   refreshMs: 10 * 60 * 1000,

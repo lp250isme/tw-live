@@ -20,6 +20,7 @@ export default {
   Icon: Droplets,
   unit: '%',
   gauge: 'fill',
+  detailGauge: 'radial',
   views: ['grid', 'map'],
   refreshMs: 30 * 60 * 1000,
 

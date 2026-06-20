@@ -77,6 +77,12 @@ water·river(WRA)｜weather·rain·uv·quake(CWA)｜air(MOENV)｜youbike·parkin
   （**iOS 必須先「加到主畫面」**才有 PushManager，元件會偵測 standalone 給對應指引）。
 - `track.js`：`/api/track` 點擊情報寫 KV `twlog:*`（每 session 每源一次，含使用者授權定位的 la/ln）、
   `/api/track-stats` 聚合；go.kvcc.me Console 的「TW Live」分頁讀它。
+- `cors.js` / 限流：資料雖公開，但 CORS Allow-Origin **只允許 kvcc 家族**
+  （`kvcc.me`/`*.kvcc.me`/`kvcc.dpdns.org`/localhost——含 go.kvcc.me Console 跨來源讀
+  `/api/track-stats`；**只放 live.kvcc.me 會把 Console 擋成「讀取失敗」**），別站瀏覽器
+  嵌入會被擋（curl/server-side 仍可——CORS 只是瀏覽器控制）。`index.js` 用 Workers
+  **原生 `ratelimits` binding**（`env.API_RL`，100 req/60s/IP，edge-local **零 KV 寫入**）擋量級白嫖。
+  單一收口 `withCors(resp,request)` 覆寫所有回應（含快取回應，header 本來不可變）的 Allow-Origin。
 - secrets：`CWA_KEY`、`MOENV_KEY`(選)、`TDX_CLIENT_ID/SECRET`（`wrangler secret put`）。
 
 ## 設計（DESIGN.md）
@@ -86,6 +92,9 @@ Linear 風：近黑 `#08090a`、indigo accent、hairline border、Inter；環形
 
 ## 已知坑
 - **WRA/台電/中油上游偶發暫時性 5xx**（WRA 520、台電 202）：fetch 各重試一次 + Cache stale 兜底。
+- **多上游聚合的源頭失敗要 throw、別回空**：parking 併兩市，舊版 `allSettled` 後只取 fulfilled，
+  **兩市全失敗會回 `[]` 被 withEdgeCache 當成功快取住** → 一段時間所有人「車位不出來」。修法＝全失敗
+  就 throw（走 stale/前端重試）。新增「多 upstream 併合」的源頭都要照辦，別讓空結果被當成功。
 - **opendata.wra / data.moenv 有 F5 WAF**：要帶完整瀏覽器 header（CF Worker edge 打得過）。
 - **CWA 紫外線(O-A0005)** 只有 StationID+UV，要 join 氣象站(O-A0001) 拿名稱座標。
 - **油價 endpoint** 要小寫 `/opendata/mainprodlistprice`（大寫會 302）。
