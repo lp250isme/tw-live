@@ -15,6 +15,8 @@
   --color-ring: #5e6ad2;
   --color-primary: #5e6ad2;
   --color-primary-foreground: #ffffff;
+  --color-up: #d92d20; /* 漲 紅（台灣慣例） */
+  --color-down: #2f9e44; /* 跌 綠 */
 }
 
 @layer base {
@@ -30,6 +32,8 @@
     --color-ring: #7c7dff;
     --color-primary: #7c7dff;
     --color-primary-foreground: #ffffff;
+    --color-up: #ff6166; /* 漲 紅（暗色提亮一階） */
+    --color-down: #4bbf6b; /* 跌 綠 */
     color-scheme: dark;
   }
 

@@ -1,4 +1,4 @@
-import { MapPin } from 'lucide-react'
+import { MapPin, ArrowUp, ArrowDown } from 'lucide-react'
 import { cn, withAlpha } from '@/lib/utils'
 import { getTier } from '@/lib/tier'
 import { useLang } from '@/lib/i18n'
@@ -64,8 +64,20 @@ export default function DataRow({ source, item, onClick }) {
       )}
 
       <div className="shrink-0 text-right tabular-nums">
-        <span className="text-base font-semibold">{fmtValue(source, value)}</span>
-        {unit && <span className="ml-0.5 text-[11px] text-muted-foreground">{unit}</span>}
+        <div>
+          <span className="text-base font-semibold">{fmtValue(source, value)}</span>
+          {unit && <span className="ml-0.5 text-[11px] text-muted-foreground">{unit}</span>}
+        </div>
+        {/* Week-over-week move (oil prices carry delta/dir; other sources don't). */}
+        {item.delta != null && item.dir !== 0 && (
+          <div
+            className="mt-0.5 flex items-center justify-end gap-0.5 text-[11px] font-medium"
+            style={{ color: item.dir > 0 ? 'var(--color-up)' : 'var(--color-down)' }}
+          >
+            {item.dir > 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+            <span>{item.dir > 0 ? '+' : '−'}{Math.abs(item.delta).toFixed(1)}</span>
+          </div>
+        )}
       </div>
 
       {meta && <div className="shrink-0"><StatusBadge source={source} value={value} /></div>}
