@@ -1,4 +1,5 @@
 import { withEdgeCache } from '../cache'
+import { getHistory } from './oil-history'
 
 // CPC (中油) reference retail fuel prices. Main consumer fuels only (NT$/L).
 const URL = 'https://vipmbr.cpc.com.tw/opendata/mainprodlistprice'
@@ -57,6 +58,16 @@ async function build(env) {
       it.prev = prev
       it.delta = delta
       it.dir = delta > 0 ? 1 : delta < 0 ? -1 : 0
+    }
+  }
+
+  // Per-fuel weekly history for the detail-dialog sparkline (CPC history covers
+  // 92/95/98/柴油, not 酒精汽油 — those items simply ship without a series).
+  const hist = await getHistory(env)
+  if (hist?.length) {
+    for (const it of items) {
+      const series = hist.map((h) => (h.p[it.name] != null ? { ts: h.ts, v: h.p[it.name] } : null)).filter(Boolean)
+      if (series.length > 1) it.history = series
     }
   }
   return items

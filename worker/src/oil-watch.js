@@ -1,4 +1,5 @@
 import { handleOil } from './sources/oil'
+import { refreshOilHistory } from './sources/oil-history'
 import { fetchPrediction } from './sources/oil-predict'
 import { pushToAll } from './push'
 import { json } from './cors'
@@ -91,6 +92,8 @@ export async function checkOilUpdate(env, ctx) {
   }
   if (!Array.isArray(items) || !items.length) return
 
+  await refreshOilHistory(env).catch(() => {}) // keep the weekly sparkline series fresh
+
   const ts = items.map((i) => i.ts).filter(Boolean).sort().pop() || ''
   if (!ts) return
   const prices = {}
@@ -101,6 +104,13 @@ export async function checkOilUpdate(env, ctx) {
   if (!snap) {
     await env.TDX_KV.put('oil:snap', JSON.stringify({ ts, prices, prevTs: null, prevPrices: null }))
     return // seed baseline silently
+  }
+
+  // CPC re-affirms the effective date weekly even when prices don't move; only
+  // treat it as a real change (and notify) if a price actually differs.
+  if (!Object.keys(prices).some((n) => snap.prices?.[n] !== prices[n])) {
+    await env.TDX_KV.put('oil:snap', JSON.stringify({ ...snap, ts })) // advance ts, stay silent
+    return
   }
 
   const prev = snap.prices || {}

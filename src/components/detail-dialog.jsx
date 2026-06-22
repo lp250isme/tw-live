@@ -2,6 +2,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { X, MapPin } from 'lucide-react'
 import { useLang } from '@/lib/i18n'
 import DetailGauge from './gauges'
+import Sparkline from './sparkline'
 
 function InfoRow({ icon: Icon, label, value }) {
   return (
@@ -55,6 +56,13 @@ export default function DetailDialog({ source, open, onOpenChange, item, detail 
               {fields.map((f, i) => (
                 <InfoRow key={i} icon={f.icon} label={t(f.label)} value={f.value} />
               ))}
+            </div>
+          )}
+
+          {item.history?.length > 1 && (
+            <div className="mt-4 rounded-xl border border-primary/10 bg-muted/20 backdrop-blur-sm p-4">
+              <div className="mb-2 text-sm text-muted-foreground">近 {item.history.length} 週走勢（元/公升）</div>
+              <Sparkline data={item.history} />
             </div>
           )}
         </Dialog.Content>
