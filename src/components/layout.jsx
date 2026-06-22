@@ -27,6 +27,9 @@ export default function Layout() {
               Built by kv
             </a>
           </p>
+          <p className="text-center text-[10px] text-muted-foreground/40 mt-1">
+            TW Live {typeof __GIT_SHA__ !== 'undefined' ? __GIT_SHA__ : 'dev'}
+          </p>
         </footer>
       </div>
     </div>
