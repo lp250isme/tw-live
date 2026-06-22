@@ -1,4 +1,4 @@
-import { Fuel, DollarSign, Clock } from 'lucide-react'
+import { Fuel, DollarSign, Clock, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { API_BASE } from '@/lib/config'
 
 // CPC (中油) reference retail fuel prices (NT$/L). Info tiles, no map.
@@ -36,6 +36,18 @@ export default {
 
   detailFields: (item) => [
     { icon: DollarSign, label: { zh: '參考牌價', en: 'Price' }, value: item.value != null ? `${item.value} 元/公升` : '--' },
+    ...(item.delta != null
+      ? [
+          {
+            icon: item.dir > 0 ? TrendingUp : item.dir < 0 ? TrendingDown : Minus,
+            label: { zh: '較上週', en: 'vs last week' },
+            value:
+              item.dir === 0
+                ? '持平' + (item.prev != null ? `（上週 ${item.prev}）` : '')
+                : `${item.dir > 0 ? '▲ +' : '▼ −'}${Math.abs(item.delta).toFixed(1)} 元` + (item.prev != null ? `（上週 ${item.prev}）` : ''),
+          },
+        ]
+      : []),
     { icon: Clock, label: { zh: '生效日期', en: 'Effective' }, value: item.ts ?? '--' },
   ],
 }
