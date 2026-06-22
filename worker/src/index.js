@@ -13,7 +13,7 @@ import { handleOil } from './sources/oil'
 import { handleSummary } from './summary'
 import { handleTrack, handleTrackStats } from './track'
 import { handlePushSubscribe, handlePushTest } from './push'
-import { handleOilCron } from './oil-watch'
+import { handleOilCron, handleOilPredictCron } from './oil-watch'
 
 // tw-live-api — unified proxy/aggregator for Taiwan government open data.
 // Holds upstream API keys (later sources), normalizes responses, adds CORS, and
@@ -34,6 +34,7 @@ const ROUTES = {
   '/api/push/subscribe': handlePushSubscribe,
   '/api/push/test': handlePushTest,
   '/api/cron/oil-check': handleOilCron,
+  '/api/cron/oil-predict': handleOilPredictCron,
   '/api/track': handleTrack,
   '/api/track-stats': handleTrackStats,
 }
