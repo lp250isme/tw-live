@@ -15,7 +15,7 @@ export default function Layout() {
         <main className="container mx-auto px-4 py-6 flex-1 w-full">
           <Outlet />
         </main>
-        <footer className="container mx-auto px-4 pb-10 pt-4 w-full">
+        <footer className="container mx-auto px-4 pt-4 w-full pb-[calc(2.5rem+env(safe-area-inset-bottom))]">
           <p className="text-center text-xs text-muted-foreground/50">
             {t({ zh: '資料來源：政府資料開放平臺 · ', en: 'Data: Taiwan Open Data · ' })}
             <a
