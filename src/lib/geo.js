@@ -23,3 +23,17 @@ export function itemDistance(coords, item) {
   if (!coords || item?.lat == null || item?.lng == null) return null
   return haversineKm(coords.lat, coords.lng, item.lat, item.lng)
 }
+
+// Deep-link an item to Google Maps. Prefer name+address so it lands on the real
+// place card (the landmark); fall back to raw coords for stations that only
+// carry lat/lng. null = nothing to locate → no map link shown.
+export function mapsUrl(item) {
+  if (!item) return null
+  const addr = item.meta?.address || item.meta?.addr
+  const query = addr
+    ? [item.name, addr].filter(Boolean).join(' ')
+    : item.lat != null && item.lng != null
+      ? `${item.lat},${item.lng}`
+      : null
+  return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : null
+}

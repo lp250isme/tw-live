@@ -1,6 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog'
-import { X, MapPin } from 'lucide-react'
+import { X, MapPin, Navigation } from 'lucide-react'
 import { useLang } from '@/lib/i18n'
+import { mapsUrl } from '@/lib/geo'
 import DetailGauge from './gauges'
 import Sparkline from './sparkline'
 
@@ -23,6 +24,7 @@ export default function DetailDialog({ source, open, onOpenChange, item, detail 
   const value = detail?.value ?? item.value ?? null
   const fields = source.detailFields ? source.detailFields(item, detail) : []
   const Icon = source.Icon
+  const gmaps = mapsUrl(item)
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -57,6 +59,18 @@ export default function DetailDialog({ source, open, onOpenChange, item, detail 
                 <InfoRow key={i} icon={f.icon} label={t(f.label)} value={f.value} />
               ))}
             </div>
+          )}
+
+          {gmaps && (
+            <a
+              href={gmaps}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+            >
+              <Navigation className="h-4 w-4" />
+              {t({ zh: '在 Google 地圖開啟', en: 'Open in Google Maps' })}
+            </a>
           )}
 
           {item.history?.length > 1 && (
