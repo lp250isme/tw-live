@@ -28,7 +28,7 @@ A real-time dashboard that aggregates **11 streams** of Taiwan's government open
 - **Built to grow** — a new source is one config object + one Worker adapter.
 
 ### Tech
-- **Frontend** — Vite + React 19 + Tailwind CSS v4, React Query, React Router, Leaflet. Deployed on Vercel (`live.kvcc.me`).
+- **Frontend** — Vite + React 19 + Tailwind CSS v4, React Query, React Router, Leaflet. Deployed on Cloudflare Workers static assets (`live.kvcc.me`).
 - **Data proxy** — a Cloudflare Worker (`live-api.kvcc.me`) that holds API keys, normalizes each source into a common shape, adds CORS, and edge-caches via the Cache API (with a 24h stale fallback for flaky upstreams). Zero KV writes.
 - **Source abstraction** — every source is a config in `src/lib/sources/`; generic components (gauge, card, map, search) are driven entirely off it.
 
@@ -63,7 +63,7 @@ Open data © their respective agencies via Taiwan's open data platform. Built by
 - **可擴充** — 新增一個資料源 = 一份 config + 一個 Worker adapter。
 
 ### 技術
-- **前端** — Vite + React 19 + Tailwind CSS v4、React Query、React Router、Leaflet，部署於 Vercel（`live.kvcc.me`）。
+- **前端** — Vite + React 19 + Tailwind CSS v4、React Query、React Router、Leaflet，部署於 Cloudflare Workers 靜態 assets（`live.kvcc.me`）。
 - **資料代理** — Cloudflare Worker（`live-api.kvcc.me`）：藏 API key、把各來源正規化成共用形狀、處理 CORS、用 Cache API 邊緣快取（上游抽風時回退 24h 舊資料）。零 KV 寫入。
 - **資料源抽象** — 每個源是 `src/lib/sources/` 的一份 config，通用元件（量表/卡片/地圖/搜尋）全由它驅動。
 

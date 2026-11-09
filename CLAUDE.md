@@ -1,6 +1,6 @@
 # CLAUDE.md — tw-live（台灣即時 / TW Live）
 
-台灣政府開放資料即時 hub。前端 `live.kvcc.me`（Vite+React，Vercel）＋ 資料代理
+台灣政府開放資料即時 hub。前端 `live.kvcc.me`（Vite+React，CF Workers 靜態 assets）＋ 資料代理
 Worker `live-api.kvcc.me`（`worker/`，Cloudflare）。前身是 reservoir-view 單一水庫
 儀表板，已重構成多源 hub（11 源）+ Linear 風暗色設計。跨 repo 鐵則見 `~/workspace/CLAUDE.md`。
 
@@ -9,7 +9,7 @@ Worker `live-api.kvcc.me`（`worker/`，Cloudflare）。前身是 reservoir-view
 ```bash
 npm run dev        # Vite dev（前端，base '/'）。本地要連 worker：VITE_API_BASE=http://127.0.0.1:8799
 npm run build      # 前端 production build → dist/
-vercel deploy --prod --yes --scope lp250ismes-projects   # 部署前端（CLI 直推，非 git 整合）
+npm run build && npx wrangler deploy                      # 部署前端（CF Workers assets；SPA fallback＝wrangler.jsonc、/assets 快取＝public/_headers；push 不自動部署）
 cd worker && npx wrangler deploy                          # 部署資料代理 Worker
 ```
 
@@ -99,5 +99,5 @@ Linear 風：近黑 `#08090a`、indigo accent、hairline border、Inter；環形
 - **CWA 紫外線(O-A0005)** 只有 StationID+UV，要 join 氣象站(O-A0001) 拿名稱座標。
 - **油價 endpoint** 要小寫 `/opendata/mainprodlistprice`（大寫會 302）。
 - 搜尋輸入用 local state（非 URL 往返）才不會打斷中文 IME；URL 改 debounce 同步。
-- Vercel 專案內部名仍是 reservoir-view（不影響，網域 live.kvcc.me）；repo 預設分支 **master**。
+- 前端 Worker 名 tw-live-web（舊 Vercel 專案 reservoir-view 已停用、vercel.json 已刪）；repo 預設分支 **master**。
 - 公車/捷運/台鐵即時到站、發票號碼、預報類不適合「站點+值+地圖」模型，要另設計版面。

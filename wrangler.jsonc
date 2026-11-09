@@ -1,4 +1,4 @@
-// Cloudflare Workers Static Assets（Vercel 遷移，vercel.json 保留供退回）。
+// Cloudflare Workers Static Assets（已從 Vercel 遷移，vercel.json 已刪）。
 // 純靜態：沒有 main，所有請求由 assets 直接回應，不吃 Worker CPU/請求額度。
 // 切網域時才加 routes（例："routes": [{ "pattern": "live.kvcc.me", "custom_domain": true }]），現在加會撞既有 DNS 紀錄。
 // 部署：npm run build && npx wrangler@latest deploy
