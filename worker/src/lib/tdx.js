@@ -20,18 +20,70 @@ async function fetchToken(env) {
   return { token: j.access_token, expiresIn: j.expires_in || 86400 }
 }
 
+// Token lookup order: isolate memory → Cache API → KV (backup). KV is NOT on the
+// critical path: when the daily 1k KV write quota is burned (e.g. by /api/track
+// spam) put() throws, and we still serve the token from memory/Cache.
+const CACHE_KEY = new Request('https://edge-cache.twlive/tdx-token')
+let mem = null // { token, exp(ms) }
+
 async function getToken(env) {
   if (!env.TDX_CLIENT_ID || !env.TDX_CLIENT_SECRET) throw new Error('TDX credentials not set')
+  if (mem && mem.exp > Date.now()) return mem.token
+  try {
+    const hit = await caches.default.match(CACHE_KEY)
+    if (hit) {
+      const t = await hit.text()
+      if (t) return remember(t, 3600)
+    }
+  } catch {
+    /* fall through */
+  }
   if (env.TDX_KV) {
-    const cached = await env.TDX_KV.get(KV_KEY)
-    if (cached) return cached
+    try {
+      const cached = await env.TDX_KV.get(KV_KEY)
+      if (cached) return remember(cached, 3600)
+    } catch {
+      /* KV quota/outage — just mint a new one */
+    }
   }
   const { token, expiresIn } = await fetchToken(env)
+  // expire a little early to avoid edge-of-life failures
+  const ttl = Math.max(120, expiresIn - 600)
+  remember(token, ttl)
+  try {
+    await caches.default.put(CACHE_KEY, new Response(token, { headers: { 'cache-control': `public, max-age=${ttl}` } }))
+  } catch {
+    /* ignore */
+  }
   if (env.TDX_KV) {
-    // expire a little early to avoid edge-of-life failures
-    await env.TDX_KV.put(KV_KEY, token, { expirationTtl: Math.max(120, expiresIn - 600) })
+    try {
+      await env.TDX_KV.put(KV_KEY, token, { expirationTtl: ttl })
+    } catch {
+      /* write quota exhausted — memory/Cache still hold it */
+    }
   }
   return token
+}
+
+// Cap memory lifetime (KV/Cache copies may be older than we know) so a revoked
+// token is retried within an hour at worst; 401 path below also clears it.
+function remember(token, ttlSec) {
+  mem = { token, exp: Date.now() + Math.min(ttlSec, 3600) * 1000 }
+  return token
+}
+
+async function dropToken(env) {
+  mem = null
+  try {
+    await caches.default.delete(CACHE_KEY)
+  } catch {
+    /* ignore */
+  }
+  try {
+    await env.TDX_KV?.delete(KV_KEY)
+  } catch {
+    /* ignore */
+  }
 }
 
 export async function tdxGet(env, path) {
@@ -39,8 +91,8 @@ export async function tdxGet(env, path) {
   const url = `${API_BASE}${path}`
   let r = await fetch(url, { headers: { authorization: `Bearer ${token}` }, cf: { cacheTtl: 0 } })
   // token might have been revoked early — refresh once
-  if (r.status === 401 && env.TDX_KV) {
-    await env.TDX_KV.delete(KV_KEY)
+  if (r.status === 401) {
+    await dropToken(env)
     const fresh = await getToken(env)
     r = await fetch(url, { headers: { authorization: `Bearer ${fresh}` }, cf: { cacheTtl: 0 } })
   }
