@@ -105,6 +105,19 @@ test('pushToAll: stops at the subrequest budget and reports skipped', async () =
   } finally { m.restore(); console.warn = warn }
 })
 
+test('pushToAll: honors custom budget param', async () => {
+  const entries = []
+  for (let i = 0; i < 60; i++) { const s = await realSub('fcm.googleapis.com', i); entries.push({ name: `push:${i}`, value: '', metadata: { sub: s } }) }
+  const env = await mkEnv(entries)
+  const m = mockFetch()
+  const warn = console.warn; console.warn = () => {}
+  try {
+    const r = await pushToAll(env, {}, 10)
+    assert.equal(m.urls.length, 9) // 1 list + 9 fetches = 10
+    assert.equal(r.skipped, 51)
+  } finally { m.restore(); console.warn = warn }
+})
+
 test('subscribe: rejects bad endpoint / oversize, stores metadata for good one', async () => {
   const env = await mkEnv([])
   const post = (body) => handlePushSubscribe(new Request('https://x/api/push/subscribe', { method: 'POST', body: typeof body === 'string' ? body : JSON.stringify(body) }), {}, env)

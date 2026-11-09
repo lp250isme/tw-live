@@ -61,7 +61,12 @@ export default {
     // Push routes store/send to caller-supplied endpoints → much stricter limit.
     if (env.PUSH_RL && path.startsWith('/api/push/')) {
       const ip = request.headers.get('cf-connecting-ip') || 'anon'
-      const { success } = await env.PUSH_RL.limit({ key: ip })
+      let success = true
+      try {
+        ;({ success } = await env.PUSH_RL.limit({ key: ip }))
+      } catch {
+        /* limiter error → fail open */
+      }
       if (!success) return withCors(json({ error: 'rate limited' }, 429), request)
     }
 

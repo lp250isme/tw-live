@@ -165,7 +165,7 @@ export async function handlePushTest(request, ctx, env) {
 // Free plan allows 50 subrequests per invocation (KV ops + fetches all count),
 // so stop at SUBREQ_BUDGET and report how many were left unsent.
 const SUBREQ_BUDGET = 45
-export async function pushToAll(env, payloadObj) {
+export async function pushToAll(env, payloadObj, budget = SUBREQ_BUDGET) {
   if (!env.TDX_KV) return { sent: 0, removed: 0, skipped: 0 }
   let sent = 0
   let removed = 0
@@ -173,14 +173,14 @@ export async function pushToAll(env, payloadObj) {
   let used = 0
   let cursor
   do {
-    if (used >= SUBREQ_BUDGET) break
+    if (used >= budget) break
     const res = await env.TDX_KV.list({ prefix: 'push:', limit: 1000, cursor })
     used++
     for (let i = 0; i < res.keys.length; i++) {
       const k = res.keys[i]
       let sub = k.metadata?.sub // new entries: no GET needed
       const need = sub ? 1 : 2 // push fetch (+ GET for legacy entries)
-      if (used + need > SUBREQ_BUDGET) {
+      if (used + need > budget) {
         skipped += res.keys.length - i
         break
       }
@@ -199,7 +199,7 @@ export async function pushToAll(env, payloadObj) {
         used++
         const r = await sendWebPush(sub, payloadObj, env)
         if (r.status === 404 || r.status === 410) {
-          if (used < SUBREQ_BUDGET) {
+          if (used < budget) {
             await env.TDX_KV.delete(k.name)
             used++
             removed++

@@ -4,6 +4,9 @@ import { fetchPrediction } from './sources/oil-predict'
 import { pushToAll } from './push'
 import { json } from './cors'
 
+// Free = 50 subrequests/invocation; the watchers already spend ~8-15 before pushing → leave pushToAll a conservative slice.
+const PUSH_BUDGET = 35
+
 // HTTP entries (called by the shortlink worker's cron, since this account is at
 // its cron-trigger limit). Lightly gated by a shared key.
 export async function handleOilCron(request, ctx, env) {
@@ -71,8 +74,9 @@ export async function checkOilPredict(env, ctx) {
   }
 
   const { title, body } = predMessage(pred)
-  await pushToAll(env, { title, body, url: 'https://live.kvcc.me/oil' })
+  // record first: an over-budget/failed push must not re-fire next tick. Caller already spent several subrequests → conservative budget.
   await env.TDX_KV.put('oil:predict', JSON.stringify({ byFuel: pred.byFuel, sources: pred.sources, pushedAt: new Date().toISOString() }))
+  await pushToAll(env, { title, body, url: 'https://live.kvcc.me/oil' }, PUSH_BUDGET)
   return { pushed: true, prediction: pred }
 }
 
@@ -147,7 +151,7 @@ export async function checkOilUpdate(env, ctx) {
   const corrected = predict?.byFuel != null // a prediction existed but didn't match
   const title = corrected ? `⛽ 油價公告・與預測不同（${mdOf(ts)} 起${dir}）` : `⛽ 油價 ${mdOf(ts)} 起${dir}`
 
-  await pushToAll(env, { title, body: `${parts.join('　')}（元/公升）`, url: 'https://live.kvcc.me/oil' })
-  await writeSnap()
+  await writeSnap() // record first so a failed/over-budget push doesn't re-fire next tick
+  await pushToAll(env, { title, body: `${parts.join('　')}（元/公升）`, url: 'https://live.kvcc.me/oil' }, PUSH_BUDGET)
   if (predict) await env.TDX_KV.delete('oil:predict')
 }
