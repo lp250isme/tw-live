@@ -58,6 +58,13 @@ export default {
       return withCors(json({ ok: true, service: 'tw-live-api', sources: Object.keys(ROUTES).map((p) => p.replace('/api/', '')) }), request)
     }
 
+    // Push routes store/send to caller-supplied endpoints → much stricter limit.
+    if (env.PUSH_RL && path.startsWith('/api/push/')) {
+      const ip = request.headers.get('cf-connecting-ip') || 'anon'
+      const { success } = await env.PUSH_RL.limit({ key: ip })
+      if (!success) return withCors(json({ error: 'rate limited' }, 429), request)
+    }
+
     const handler = ROUTES[path]
     if (!handler) return withCors(json({ error: 'not found', path }, 404), request)
 

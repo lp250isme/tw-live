@@ -82,6 +82,38 @@ async function encryptPayload(plaintextStr, p256dhB64u, authB64u) {
   return concat(salt, new Uint8Array([0, 0, 0x10, 0]), new Uint8Array([asPublic.length]), asPublic, ct)
 }
 
+// Only real browser push services. Without this, subscribe/test would POST to
+// any URL a caller supplies (SSRF-ish abuse of our egress). Exact host or a
+// dot-prefixed suffix match, so `x.push.apple.com.evil.com` is rejected.
+const PUSH_HOSTS = ['fcm.googleapis.com']
+const PUSH_SUFFIXES = ['.push.apple.com', '.push.services.mozilla.com', '.notify.windows.com']
+export function isAllowedPushEndpoint(raw) {
+  let u
+  try {
+    u = new URL(raw)
+  } catch {
+    return false
+  }
+  if (u.protocol !== 'https:' || u.username || u.password || u.port) return false
+  const h = u.hostname
+  return PUSH_HOSTS.includes(h) || PUSH_SUFFIXES.some((s) => h.endsWith(s))
+}
+
+const MAX_BODY = 4096 // a real PushSubscription is ~0.5KB
+async function readSub(request) {
+  const text = await request.text()
+  if (text.length > MAX_BODY) return { error: json({ error: 'body too large' }, 413) }
+  let sub
+  try {
+    sub = JSON.parse(text)
+  } catch {
+    return { error: json({ error: 'bad json' }, 400) }
+  }
+  if (!sub?.endpoint || !sub?.keys?.p256dh || !sub?.keys?.auth) return { error: json({ error: 'invalid subscription' }, 400) }
+  if (typeof sub.endpoint !== 'string' || !isAllowedPushEndpoint(sub.endpoint)) return { error: json({ error: 'endpoint not allowed' }, 400) }
+  return { sub }
+}
+
 // Send one push. Returns the upstream Response (201 = ok; 404/410 = gone).
 export async function sendWebPush(sub, payloadObj, env) {
   const body = await encryptPayload(JSON.stringify(payloadObj), sub.keys.p256dh, sub.keys.auth)
@@ -102,19 +134,16 @@ export async function sendWebPush(sub, payloadObj, env) {
 // hash of its endpoint so re-subscribing the same browser overwrites.
 export async function handlePushSubscribe(request, ctx, env) {
   if (request.method !== 'POST') return json({ error: 'method not allowed' }, 405)
-  let sub
-  try {
-    sub = await request.json()
-  } catch {
-    return json({ error: 'bad json' }, 400)
-  }
-  if (!sub?.endpoint || !sub?.keys?.p256dh || !sub?.keys?.auth) return json({ error: 'invalid subscription' }, 400)
+  const { sub, error } = await readSub(request)
+  if (error) return error
   const id = await hashHex(sub.endpoint)
-  await env.TDX_KV.put(
-    `push:${id}`,
-    JSON.stringify({ endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth }, t: Date.now() }),
-    { expirationTtl: 400 * 24 * 3600 }
-  )
+  const slim = { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } }
+  // KV list() returns metadata for free, so pushToAll needn't GET every key
+  // (Free = 50 subrequests/invocation). Metadata cap is 1024B; if over, value-only.
+  const metadata = { sub: slim }
+  const opts = { expirationTtl: 400 * 24 * 3600 }
+  if (utf8(JSON.stringify(metadata)).length <= 1024) opts.metadata = metadata
+  await env.TDX_KV.put(`push:${id}`, JSON.stringify({ ...slim, t: Date.now() }), opts)
   return json({ ok: true })
 }
 
@@ -122,13 +151,8 @@ export async function handlePushSubscribe(request, ctx, env) {
 // body. Safe without auth: you can only target a subscription you already hold.
 export async function handlePushTest(request, ctx, env) {
   if (request.method !== 'POST') return json({ error: 'method not allowed' }, 405)
-  let sub
-  try {
-    sub = await request.json()
-  } catch {
-    return json({ error: 'bad json' }, 400)
-  }
-  if (!sub?.endpoint || !sub?.keys?.p256dh || !sub?.keys?.auth) return json({ error: 'invalid subscription' }, 400)
+  const { sub, error } = await readSub(request)
+  if (error) return error
   try {
     const r = await sendWebPush(sub, { title: '✅ 通知測試', body: 'TW Live 推播設定成功，油價更新時會通知你。', url: 'https://live.kvcc.me/oil' }, env)
     return json({ ok: r.ok, status: r.status })
@@ -138,27 +162,48 @@ export async function handlePushTest(request, ctx, env) {
 }
 
 // Fan out a notification to every stored subscription; prune dead ones.
+// Free plan allows 50 subrequests per invocation (KV ops + fetches all count),
+// so stop at SUBREQ_BUDGET and report how many were left unsent.
+const SUBREQ_BUDGET = 45
 export async function pushToAll(env, payloadObj) {
-  if (!env.TDX_KV) return { sent: 0, removed: 0 }
+  if (!env.TDX_KV) return { sent: 0, removed: 0, skipped: 0 }
   let sent = 0
   let removed = 0
+  let skipped = 0
+  let used = 0
   let cursor
   do {
+    if (used >= SUBREQ_BUDGET) break
     const res = await env.TDX_KV.list({ prefix: 'push:', limit: 1000, cursor })
-    for (const k of res.keys) {
-      const raw = await env.TDX_KV.get(k.name)
-      if (!raw) continue
-      let sub
-      try {
-        sub = JSON.parse(raw)
-      } catch {
-        continue
+    used++
+    for (let i = 0; i < res.keys.length; i++) {
+      const k = res.keys[i]
+      let sub = k.metadata?.sub // new entries: no GET needed
+      const need = sub ? 1 : 2 // push fetch (+ GET for legacy entries)
+      if (used + need > SUBREQ_BUDGET) {
+        skipped += res.keys.length - i
+        break
       }
+      if (!sub) {
+        const raw = await env.TDX_KV.get(k.name)
+        used++
+        if (!raw) continue
+        try {
+          sub = JSON.parse(raw)
+        } catch {
+          continue
+        }
+      }
+      if (!sub?.keys?.p256dh || !sub?.keys?.auth || !isAllowedPushEndpoint(sub.endpoint)) continue
       try {
+        used++
         const r = await sendWebPush(sub, payloadObj, env)
         if (r.status === 404 || r.status === 410) {
-          await env.TDX_KV.delete(k.name)
-          removed++
+          if (used < SUBREQ_BUDGET) {
+            await env.TDX_KV.delete(k.name)
+            used++
+            removed++
+          }
         } else if (r.ok) {
           sent++
         }
@@ -167,6 +212,8 @@ export async function pushToAll(env, payloadObj) {
       }
     }
     cursor = res.list_complete ? null : res.cursor
+    if (skipped) break
   } while (cursor)
-  return { sent, removed }
+  if (skipped || cursor) console.warn(`pushToAll: subrequest budget hit, ${skipped} subscription(s) not sent (plus any further pages)`)
+  return { sent, removed, skipped }
 }
