@@ -1,8 +1,10 @@
+import { Suspense } from 'react'
 import { Outlet } from 'react-router-dom'
 import AnimatedBackground from '@/components/animated-background'
 import Header from '@/components/header'
 import { useTheme } from '@/lib/theme'
 import { useLang } from '@/lib/i18n'
+import LoadingSkeleton from '@/components/loading-skeleton'
 
 export default function Layout() {
   const theme = useTheme()
@@ -13,7 +15,11 @@ export default function Layout() {
       <div className="relative z-10 flex flex-col min-h-screen">
         <Header theme={theme} />
         <main className="container mx-auto px-4 py-6 flex-1 w-full">
-          <Outlet />
+          {/* Route chunks are lazy — reuse the list skeleton so the swap in is
+              the same shape as the content that replaces it (no layout jump). */}
+          <Suspense fallback={<LoadingSkeleton />}>
+            <Outlet />
+          </Suspense>
         </main>
         <footer className="container mx-auto px-4 pt-4 w-full pb-[calc(2.5rem+env(safe-area-inset-bottom))]">
           <p className="text-center text-xs text-muted-foreground/50">
