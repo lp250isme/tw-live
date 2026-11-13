@@ -60,7 +60,7 @@ export default function Header({ theme }) {
           <button
             onClick={() => (coords ? clear() : request())}
             className={cn(
-              'rounded-full p-2.5 border transition-colors duration-150',
+              'hit-44 rounded-full p-2.5 border transition-colors duration-150',
               coords
                 ? 'border-primary/50 bg-primary/10 text-primary'
                 : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -73,14 +73,14 @@ export default function Header({ theme }) {
           </button>
           <button
             onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
-            className="rounded-full px-2.5 py-2 border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 text-xs font-semibold w-9"
+            className="hit-44 rounded-full px-2.5 py-2 border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 text-xs font-semibold w-9"
             aria-label="Toggle language"
           >
             {lang === 'zh' ? '中' : 'EN'}
           </button>
           <button
             onClick={theme.cycle}
-            className="rounded-full p-2.5 border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
+            className="hit-44 rounded-full p-2.5 border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
             aria-label="Toggle theme"
           >
             <ThemeIcon className="h-4 w-4" />
