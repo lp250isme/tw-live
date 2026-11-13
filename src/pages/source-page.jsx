@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, lazy, Suspense } from 'react'
 import { useParams, useSearchParams, Navigate } from 'react-router-dom'
 import { useQueries } from '@tanstack/react-query'
-import { LayoutGrid, Map as MapIcon, TriangleAlert, Star } from 'lucide-react'
+import { LayoutGrid, Map as MapIcon, TriangleAlert, Star, ShieldCheck } from 'lucide-react'
 import { getSource } from '@/lib/sources'
 import { useSourceList } from '@/hooks/use-source'
 import { useLang } from '@/lib/i18n'
@@ -226,9 +226,14 @@ export default function SourcePage() {
         </Suspense>
       ) : filtered.length === 0 ? (
         <div className="py-16 text-center text-sm text-muted-foreground">
-          {onlyAlert
-            ? t({ zh: '目前沒有需要注意的項目 👍', en: 'Nothing needs attention right now 👍' })
-            : t({ zh: '查無符合的資料', en: 'No matching results' })}
+          {onlyAlert ? (
+            <span className="inline-flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-emerald-500" aria-hidden />
+              {t({ zh: '目前沒有需要注意的項目', en: 'Nothing needs attention right now' })}
+            </span>
+          ) : (
+            t({ zh: '查無符合的資料', en: 'No matching results' })
+          )}
         </div>
       ) : (
         <DataList source={source} items={filtered} onCardClick={onCardClick} />

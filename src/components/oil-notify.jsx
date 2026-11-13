@@ -88,8 +88,9 @@ export default function OilNotify() {
             {t({ zh: '已開啟油價更新通知', en: 'Fuel-price alerts on' })}
           </span>
           <div className="flex items-center gap-2 ml-auto">
-            <button onClick={test} className="rounded-full border border-primary/20 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
-              {tested ? t({ zh: '已送出 ✓', en: 'Sent ✓' }) : t({ zh: '傳測試', en: 'Test' })}
+            <button onClick={test} className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+              {tested && <Check className="h-3.5 w-3.5" aria-hidden />}
+              {tested ? t({ zh: '已送出', en: 'Sent' }) : t({ zh: '傳測試', en: 'Test' })}
             </button>
             <button onClick={off} className="rounded-full px-3 py-1.5 text-xs text-muted-foreground/70 hover:text-foreground transition-colors">
               {t({ zh: '關閉', en: 'Turn off' })}
