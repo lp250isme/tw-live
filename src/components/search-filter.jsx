@@ -29,7 +29,6 @@ export default function SearchFilter({ source, sortOptions = source.sortOptions,
   return (
     <div className="flex flex-col sm:flex-row gap-3 flex-1">
       <div className="relative flex-1 group">
-        <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-primary/0 via-primary/0 to-primary/0 group-focus-within:from-primary/40 group-focus-within:via-cyan-400/40 group-focus-within:to-primary/40 transition-all duration-500 blur-[2px]" />
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
@@ -44,7 +43,7 @@ export default function SearchFilter({ source, sortOptions = source.sortOptions,
 
       {sortOptions?.length > 0 && (
         <Select.Root value={sortBy} onValueChange={onSortChange}>
-          <Select.Trigger className={cn('inline-flex items-center gap-2 rounded-xl glass-input px-4 py-3 text-sm', 'hover:border-primary/30 transition-all duration-300 min-w-[180px]')}>
+          <Select.Trigger className={cn('inline-flex items-center gap-2 rounded-xl glass-input px-4 py-3 text-sm', 'hover:border-primary/30 transition-colors duration-150 min-w-[180px]')}>
             <ArrowUpDown className="h-4 w-4 text-primary/60" />
             <Select.Value placeholder={t({ zh: '排序', en: 'Sort' })} />
             <Select.Icon className="ml-auto"><ChevronDown className="h-4 w-4 text-muted-foreground" /></Select.Icon>

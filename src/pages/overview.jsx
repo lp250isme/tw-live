@@ -43,7 +43,6 @@ function SourceTile({ source, summary, loading }) {
       className="group relative flex items-center gap-3.5 rounded-xl p-4 glass-card transition-all duration-200 hover:-translate-y-0.5"
       style={{ '--card-glow': withAlpha(head?.color || source.accent, 0.18), '--card-border': withAlpha(head?.color || source.accent, 0.3) }}
     >
-      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 animated-card-border" />
       <div
         className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
         style={{ background: withAlpha(source.accent, 0.12), border: `1px solid ${withAlpha(source.accent, 0.3)}`, color: source.accent }}

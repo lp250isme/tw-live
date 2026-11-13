@@ -177,7 +177,7 @@ export default function SourcePage() {
                   key={key}
                   onClick={() => setParam('view', key === 'map' ? 'map' : '')}
                   className={cn(
-                    'flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium transition-all duration-300',
+                    'flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium transition-colors duration-150',
                     view === key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                   )}
                 >

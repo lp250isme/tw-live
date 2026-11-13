@@ -123,9 +123,6 @@
   border-color: var(--color-border);
 }
 
-/* Neutralize the old animated card border overlay */
-.animated-card-border { display: none; }
-
 /* ───────────── Map (Leaflet) ───────────── */
 .leaflet-container { z-index: 0 !important; background: var(--color-muted); }
 .leaflet-pane { z-index: 1 !important; }
