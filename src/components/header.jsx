@@ -21,8 +21,9 @@ export default function Header({ theme }) {
           to={`/${s.id}`}
           className={({ isActive }) =>
             cn(
-              'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs whitespace-nowrap transition-colors',
-              isActive ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'
+              'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs whitespace-nowrap transition-colors duration-150',
+              // DESIGN.md: quiet pills, active = subtle --muted fill + --fg.
+              isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
             )
           }
         >
@@ -34,13 +35,11 @@ export default function Header({ theme }) {
 
   return (
     <header className="sticky top-0 z-40 header-glass">
-      <div className="absolute bottom-0 left-0 right-0 h-[1px] animated-gradient-border" />
-
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-3">
         {/* Brand */}
         <NavLink to="/" className="flex items-center gap-2.5 shrink-0">
           <div className="relative">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg border border-border logo-glow">
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg border border-border logo-mark">
               <Activity className="h-[18px] w-[18px] text-primary" />
             </div>
             <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary status-dot" />
@@ -61,10 +60,10 @@ export default function Header({ theme }) {
           <button
             onClick={() => (coords ? clear() : request())}
             className={cn(
-              'rounded-full p-2.5 border transition-all duration-300',
+              'rounded-full p-2.5 border transition-colors duration-150',
               coords
-                ? 'border-primary/60 text-primary shadow-[0_0_12px_rgba(14,165,233,0.25)]'
-                : 'border-border/50 hover:border-primary/40',
+                ? 'border-primary/50 bg-primary/10 text-primary'
+                : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground',
               status === 'loading' && 'opacity-60'
             )}
             aria-label={t({ zh: '使用我的位置', en: 'Use my location' })}
@@ -74,14 +73,14 @@ export default function Header({ theme }) {
           </button>
           <button
             onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
-            className="rounded-full px-2.5 py-2 border border-border/50 hover:border-primary/40 transition-all duration-300 text-xs font-semibold w-9"
+            className="rounded-full px-2.5 py-2 border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 text-xs font-semibold w-9"
             aria-label="Toggle language"
           >
             {lang === 'zh' ? '中' : 'EN'}
           </button>
           <button
             onClick={theme.cycle}
-            className="rounded-full p-2.5 border border-border/50 hover:border-primary/40 hover:shadow-[0_0_12px_rgba(14,165,233,0.2)] transition-all duration-300"
+            className="rounded-full p-2.5 border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
             aria-label="Toggle theme"
           >
             <ThemeIcon className="h-4 w-4" />

@@ -78,10 +78,8 @@
   padding-top: env(safe-area-inset-top);
 }
 
-/* The old animated gradient line is now a static hairline (kept for layout) */
-.animated-gradient-border { background: transparent; }
-
-.logo-glow {
+/* Brand mark — flat accent tint behind the logo glyph, no glow (DESIGN.md) */
+.logo-mark {
   background: color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
