@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Star } from 'lucide-react'
+import { ArrowRight, Star, TriangleAlert, RefreshCw } from 'lucide-react'
 import { sources, categories } from '@/lib/sources'
 import { useLang } from '@/lib/i18n'
-import { withAlpha } from '@/lib/utils'
+import { cn, withAlpha } from '@/lib/utils'
 import { API_BASE } from '@/lib/config'
 import { overviewHeadline } from '@/lib/summary'
 import { useFavorites } from '@/lib/favorites'
@@ -82,6 +82,38 @@ function SourceTile({ source, summary, loading }) {
   )
 }
 
+// The summary endpoint only enriches the tiles (the tiles themselves are static
+// links), so a failure degrades rather than blocks: say so, offer a retry, and
+// leave the hub navigable instead of failing silently or spinning forever.
+function SummaryError({ onRetry, retrying }) {
+  const { t } = useLang()
+  return (
+    <div
+      role="alert"
+      className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl glass-panel px-4 py-3 text-sm"
+    >
+      <TriangleAlert className="h-4 w-4 shrink-0 text-amber-500" aria-hidden />
+      <span className="min-w-0 flex-1">
+        <span className="font-medium">{t({ zh: '即時數字載入失敗', en: 'Live readings failed to load' })}</span>
+        <span className="text-muted-foreground">
+          {t({
+            zh: '　各資料源仍可點入查看。',
+            en: ' — each source still opens normally.',
+          })}
+        </span>
+      </span>
+      <button
+        onClick={onRetry}
+        disabled={retrying}
+        className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-border px-3.5 text-xs font-medium transition-colors duration-150 hover:text-foreground disabled:opacity-50"
+      >
+        <RefreshCw className={cn('h-3.5 w-3.5', retrying && 'animate-spin')} aria-hidden />
+        {t({ zh: '重試', en: 'Retry' })}
+      </button>
+    </div>
+  )
+}
+
 function TileGrid({ list, summary, loading }) {
   return (
     // items-start: tiles hug their content instead of stretching to the tallest
@@ -96,7 +128,7 @@ function TileGrid({ list, summary, loading }) {
 
 export default function Overview() {
   const { t } = useLang()
-  const { data: summary, isLoading } = useSummary()
+  const { data: summary, isLoading, isError, isFetching, refetch } = useSummary()
   const { favs, isFav } = useFavorites()
 
   // Pinned sources float to a "favourites" section at the top, in pin order,
@@ -117,6 +149,8 @@ export default function Overview() {
           {t({ zh: '一站匯集台灣政府公開的即時資料：水情、空品、天氣、交通、能源……', en: 'One place for Taiwan’s real-time open data — water, air, weather, transit, energy…' })}
         </p>
       </section>
+
+      {isError && <SummaryError onRetry={refetch} retrying={isFetching} />}
 
       {pinned.length > 0 && (
         <section>

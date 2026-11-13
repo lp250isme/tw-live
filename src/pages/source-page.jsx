@@ -145,7 +145,13 @@ export default function SourcePage() {
 
   const onCardClick = (item, detail) => setDialog({ open: true, item, detail })
 
-  if (error) return <ErrorState onRetry={refetch} />
+  if (error)
+    return (
+      <ErrorState
+        onRetry={refetch}
+        title={{ zh: `無法載入${t(source.name)}資料`, en: `Couldn’t load ${t(source.name)}` }}
+      />
+    )
 
   return (
     <div style={{ '--color-primary': source.accent }}>
