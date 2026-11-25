@@ -1,6 +1,6 @@
 // Cloudflare Turnstile 前端（interaction-only：真人通常看不到，有疑慮才跳勾選框）。
 // 每次真的送出前呼叫一次；token 一次性。sitekey 為 PENDING 時不取 token（後端 secret 未設也會放行）。
-export const TURNSTILE_SITEKEY = 'PENDING_SITEKEY'
+export const TURNSTILE_SITEKEY = '0x4AAAAAAGScfMqD0VH5dO7J'
 
 let tsReady
 function loadTurnstile() {
