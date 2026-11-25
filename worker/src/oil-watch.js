@@ -8,9 +8,9 @@ import { json } from './cors'
 const PUSH_BUDGET = 35
 
 // HTTP entries (called by the shortlink worker's cron, since this account is at
-// its cron-trigger limit). Lightly gated by a shared key.
+// its cron-trigger limit). Gated by a shared key; fails closed when OIL_CRON_KEY is unset.
 export async function handleOilCron(request, ctx, env) {
-  if (env.OIL_CRON_KEY && request.headers.get('x-cron-key') !== env.OIL_CRON_KEY) {
+  if (!env.OIL_CRON_KEY || request.headers.get('x-cron-key') !== env.OIL_CRON_KEY) {
     return json({ error: 'forbidden' }, 403)
   }
   await checkOilUpdate(env, ctx)
@@ -18,7 +18,7 @@ export async function handleOilCron(request, ctx, env) {
 }
 
 export async function handleOilPredictCron(request, ctx, env) {
-  if (env.OIL_CRON_KEY && request.headers.get('x-cron-key') !== env.OIL_CRON_KEY) {
+  if (!env.OIL_CRON_KEY || request.headers.get('x-cron-key') !== env.OIL_CRON_KEY) {
     return json({ error: 'forbidden' }, 403)
   }
   const r = await checkOilPredict(env, ctx)
