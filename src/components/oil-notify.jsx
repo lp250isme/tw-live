@@ -46,6 +46,7 @@ export default function OilNotify() {
       await subscribe()
       setState('subscribed')
     } catch (e) {
+      if (e?.message === 'turnstile_failed') window.alert('驗證失敗，請再試一次')
       setState(e?.message === 'denied' ? 'denied' : 'idle')
     }
   }
@@ -62,8 +63,8 @@ export default function OilNotify() {
     try {
       await sendTest()
       setTested(true)
-    } catch {
-      /* ignore */
+    } catch (e) {
+      if (e?.message === 'turnstile_failed') window.alert('驗證失敗，請再試一次')
     }
   }
 

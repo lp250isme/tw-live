@@ -1,4 +1,5 @@
 import { API_BASE } from '@/lib/config'
+import { tsHeaders } from '@/lib/turnstile'
 
 // VAPID public key (uncompressed P-256 point, base64url). Public by design.
 const VAPID_PUBLIC = 'BC28FnUR2aib6I8NPg_94qj-UyYtSRLRdMcnTSt2AooeopNp3bgOS9HzGZIMITK5-p_Iq5wrrRefYYF2pdSDYaw'
@@ -38,9 +39,10 @@ export async function subscribe() {
   }
   const res = await fetch(`${API_BASE}/api/push/subscribe`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...(await tsHeaders()) },
     body: JSON.stringify(sub),
   })
+  if (res.status === 403) throw new Error('turnstile_failed')
   if (!res.ok) throw new Error('subscribe failed')
   return sub
 }
@@ -55,8 +57,9 @@ export async function sendTest() {
   if (!sub) throw new Error('not subscribed')
   const res = await fetch(`${API_BASE}/api/push/test`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...(await tsHeaders()) },
     body: JSON.stringify(sub),
   })
+  if (res.status === 403) throw new Error('turnstile_failed')
   return res.json()
 }

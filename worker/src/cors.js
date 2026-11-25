@@ -22,7 +22,8 @@ export function allowOrigin(request) {
 export const CORS = {
   'Access-Control-Allow-Origin': DEFAULT_ORIGIN,
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  // cf-turnstile-response：Turnstile token 放 header（body 就是訂閱物件本身，不混欄位）
+  'Access-Control-Allow-Headers': 'Content-Type, cf-turnstile-response',
   'Access-Control-Max-Age': '86400',
 }
 

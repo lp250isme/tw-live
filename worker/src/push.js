@@ -1,4 +1,5 @@
 import { json } from './cors'
+import { turnstileGate, turnstileTokenFrom } from './turnstile'
 import { cachedNumber } from './daycap'
 
 // Self-hosted Web Push (VAPID + RFC 8291 aes128gcm) on Workers WebCrypto — no
@@ -137,6 +138,8 @@ export async function sendWebPush(sub, payloadObj, env) {
 // hash of its endpoint so re-subscribing the same browser overwrites.
 export async function handlePushSubscribe(request, ctx, env) {
   if (request.method !== 'POST') return json({ error: 'method not allowed' }, 405)
+  const blocked = await turnstileGate(env, request, turnstileTokenFrom(request))
+  if (blocked) return blocked
   const { sub, error } = await readSub(request)
   if (error) return error
   const id = await hashHex(sub.endpoint)
@@ -169,6 +172,8 @@ export async function handlePushSubscribe(request, ctx, env) {
 // body. Safe without auth: you can only target a subscription you already hold.
 export async function handlePushTest(request, ctx, env) {
   if (request.method !== 'POST') return json({ error: 'method not allowed' }, 405)
+  const blocked = await turnstileGate(env, request, turnstileTokenFrom(request))
+  if (blocked) return blocked
   const { sub, error } = await readSub(request)
   if (error) return error
   try {
