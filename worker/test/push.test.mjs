@@ -127,3 +127,28 @@ test('subscribe: rejects bad endpoint / oversize, stores metadata for good one',
   assert.equal((await post(s)).status, 200)
   assert.deepEqual(env.calls.put[0][2].metadata.sub, s)
 })
+
+test('subscribe: refuses new subscriptions at the total cap, allows none-write refresh of existing', async () => {
+  const { MAX_SUBS } = await import('../src/push.js')
+  const entries = []
+  for (let i = 0; i < MAX_SUBS; i++) entries.push({ name: `push:${i}`, value: '{}' })
+  const env = await mkEnv(entries)
+  const post = (b) => handlePushSubscribe(new Request('https://x/api/push/subscribe', { method: 'POST', body: JSON.stringify(b) }), {}, env)
+  const s = await realSub()
+  assert.equal((await post(s)).status, 503)
+  assert.equal(env.calls.put.length, 0)
+})
+
+test('subscribe: re-subscribing a fresh existing endpoint does not write KV', async () => {
+  const env = await mkEnv([])
+  const post = (b) => handlePushSubscribe(new Request('https://x/api/push/subscribe', { method: 'POST', body: JSON.stringify(b) }), {}, env)
+  const s = await realSub()
+  assert.equal((await post(s)).status, 200)
+  assert.equal(env.calls.put.length, 1)
+  // mock get returns by name; simulate the stored entry being found
+  const [name, value] = env.calls.put[0]
+  const env2 = await mkEnv([{ name, value }])
+  const r = await handlePushSubscribe(new Request('https://x/', { method: 'POST', body: JSON.stringify(s) }), {}, env2)
+  assert.equal(r.status, 200)
+  assert.equal(env2.calls.put.length, 0)
+})

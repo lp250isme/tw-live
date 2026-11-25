@@ -1,4 +1,5 @@
 import { json } from './cors'
+import { cachedNumber } from './daycap'
 
 // Self-hosted Web Push (VAPID + RFC 8291 aes128gcm) on Workers WebCrypto — no
 // third-party push service, no per-message cost. Subscriptions live in KV; the
@@ -99,6 +100,8 @@ export function isAllowedPushEndpoint(raw) {
   return PUSH_HOSTS.includes(h) || PUSH_SUFFIXES.some((s) => h.endsWith(s))
 }
 
+export const MAX_SUBS = 500
+const REFRESH_MS = 7 * 24 * 3600 * 1000
 const MAX_BODY = 4096 // a real PushSubscription is ~0.5KB
 async function readSub(request) {
   const text = await request.text()
@@ -137,6 +140,21 @@ export async function handlePushSubscribe(request, ctx, env) {
   const { sub, error } = await readSub(request)
   if (error) return error
   const id = await hashHex(sub.endpoint)
+  // ponytail: total cap MAX_SUBS (500) so anonymous subscribes can't grow KV writes without
+  // bound. Count comes from a 5-min Cache API'd list (no counter writes). Re-subscribing an
+  // existing endpoint within 7 days is a no-op (no write). Upgrade path: D1 if >500 real users.
+  const existingRaw = await env.TDX_KV.get(`push:${id}`)
+  if (existingRaw) {
+    try {
+      if (Date.now() - (JSON.parse(existingRaw).t || 0) < REFRESH_MS) return json({ ok: true })
+    } catch { /* corrupt → rewrite */ }
+  } else {
+    const n = await cachedNumber('push-count', 300, async () => {
+      const res = await env.TDX_KV.list({ prefix: 'push:', limit: MAX_SUBS + 1 })
+      return res.keys.length
+    })
+    if (n >= MAX_SUBS) return json({ error: 'subscription limit reached' }, 503)
+  }
   const slim = { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } }
   // KV list() returns metadata for free, so pushToAll needn't GET every key
   // (Free = 50 subrequests/invocation). Metadata cap is 1024B; if over, value-only.
