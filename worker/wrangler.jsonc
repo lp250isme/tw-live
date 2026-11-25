@@ -12,7 +12,9 @@
   "ratelimits": [
     { "name": "API_RL", "namespace_id": "1", "simple": { "limit": 100, "period": 60 } },
     // /api/push/* (subscribe/test): 5 per 60s per IP.
-    { "name": "PUSH_RL", "namespace_id": "3101", "simple": { "limit": 5, "period": 60 } }
+    { "name": "PUSH_RL", "namespace_id": "3101", "simple": { "limit": 5, "period": 60 } },
+    // /api/track (only anonymous KV writer): 2 per 60s per IP.
+    { "name": "TRACK_RL", "namespace_id": "5101", "simple": { "limit": 2, "period": 60 } }
   ],
   // No own cron trigger — the account is at the 5-cron free-tier limit, so the
   // shortlink worker's existing daily cron pings /api/cron/oil-check instead.

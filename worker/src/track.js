@@ -1,5 +1,6 @@
 import { json } from './cors'
 import { withEdgeCache } from './cache'
+import { takeDaily } from './daycap'
 
 // Click intelligence: records "source opened" events into KV (twlog:*), one
 // write per source-open per session (deduped client-side) — low volume, well
@@ -9,6 +10,11 @@ const VALID_SOURCES = new Set([
   'water', 'river', 'weather', 'rain', 'air', 'quake', 'uv', 'youbike', 'parking', 'power', 'oil',
 ])
 const TTL = 90 * 24 * 60 * 60 // keep 90 days
+// ponytail: anonymous KV writes are capped by (a) TRACK_RL 2/60s/IP in index.js and (b) a
+// best-effort per-colo daily cap (Cache API counter, 0 KV writes) → at most
+// DAILY_CAP × (colos reached) writes/day, vs 1000/day account quota. Excess events are
+// dropped (ok:true, sampled:false). Upgrade path if real analytics matter: D1 or Analytics Engine.
+export const DAILY_CAP = 20
 
 export async function handleTrack(request, ctx, env) {
   if (request.method !== 'POST') return json({ error: 'method not allowed' }, 405)
@@ -33,7 +39,7 @@ export async function handleTrack(request, ctx, env) {
   const lng = coord(body.lng, 180)
   const hasGeo = lat != null && lng != null
 
-  if (env.TDX_KV) {
+  if (env.TDX_KV && (await takeDaily('track', DAILY_CAP))) {
     const now = Date.now()
     const rev = String(1e15 - now).padStart(16, '0')
     const key = `twlog:${rev}:${crypto.randomUUID().slice(0, 8)}`
@@ -52,14 +58,20 @@ export async function handleTrack(request, ctx, env) {
     )
     if (ctx?.waitUntil) ctx.waitUntil(write)
     else await write
+    return json({ ok: true })
   }
 
-  return json({ ok: true })
+  return json({ ok: true, sampled: false })
 }
 
 // GET /api/track-stats → counts by source + by country, aggregated from KV
 // metadata (no per-key GET). Edge-cached 5 min so the Console doesn't re-scan.
+// Owner-only (Console): requires x-stats-key == env.STATS_KEY; fails closed if unset, so
+// anonymous callers can't amplify KV list() ops via cache misses across colos.
 export function handleTrackStats(request, ctx, env) {
+  if (!env.STATS_KEY || request.headers.get('x-stats-key') !== env.STATS_KEY) {
+    return json({ error: 'forbidden' }, 403)
+  }
   return withEdgeCache(
     'track-stats',
     300,

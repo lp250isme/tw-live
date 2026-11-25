@@ -58,6 +58,18 @@ export default {
       return withCors(json({ ok: true, service: 'tw-live-api', sources: Object.keys(ROUTES).map((p) => p.replace('/api/', '')) }), request)
     }
 
+    // /api/track is the only anonymous KV writer → very low per-IP cap.
+    if (env.TRACK_RL && path === '/api/track') {
+      const ip = request.headers.get('cf-connecting-ip') || 'anon'
+      let success = true
+      try {
+        ;({ success } = await env.TRACK_RL.limit({ key: ip }))
+      } catch {
+        /* limiter error → fail open */
+      }
+      if (!success) return withCors(json({ error: 'rate limited' }, 429), request)
+    }
+
     // Push routes store/send to caller-supplied endpoints → much stricter limit.
     if (env.PUSH_RL && path.startsWith('/api/push/')) {
       const ip = request.headers.get('cf-connecting-ip') || 'anon'
