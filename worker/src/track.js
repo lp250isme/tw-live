@@ -1,6 +1,6 @@
 import { json } from './cors'
 import { withEdgeCache } from './cache'
-import { takeDaily } from './daycap'
+import { takeDaily, limitedAll } from './daycap'
 
 // Click intelligence: records "source opened" events into KV (twlog:*), one
 // write per source-open per session (deduped client-side) — low volume, well
@@ -15,6 +15,11 @@ const TTL = 90 * 24 * 60 * 60 // keep 90 days
 // DAILY_CAP × (colos reached) writes/day, vs 1000/day account quota. Excess events are
 // dropped (ok:true, sampled:false). Upgrade path if real analytics matter: D1 or Analytics Engine.
 export const DAILY_CAP = 20
+// 2026-11-27: the per-colo cap multiplies by colos reached (Tor exits sit in dozens of
+// non-TW colos). Real visitors are overwhelmingly in TW, so non-TW events get a smaller
+// per-colo budget, and TRACK_ALL_RL (key "all", per location) caps bursts that race the
+// non-atomic Cache API counter. Dropped events still answer 200 — invisible to users.
+export const FOREIGN_DAILY_CAP = 5
 
 export async function handleTrack(request, ctx, env) {
   if (request.method !== 'POST') return json({ error: 'method not allowed' }, 405)
@@ -39,11 +44,16 @@ export async function handleTrack(request, ctx, env) {
   const lng = coord(body.lng, 180)
   const hasGeo = lat != null && lng != null
 
-  if (env.TDX_KV && (await takeDaily('track', DAILY_CAP))) {
+  const cf = request.cf || {}
+  const tw = !cf.country || cf.country === 'TW'
+  if (
+    env.TDX_KV &&
+    !(await limitedAll(env.TRACK_ALL_RL)) &&
+    (await takeDaily(tw ? 'track' : 'track-intl', tw ? DAILY_CAP : FOREIGN_DAILY_CAP))
+  ) {
     const now = Date.now()
     const rev = String(1e15 - now).padStart(16, '0')
     const key = `twlog:${rev}:${crypto.randomUUID().slice(0, 8)}`
-    const cf = request.cf || {}
     // Source list + coords live in metadata (ss/la/ln) so track-stats counts
     // from the list scan without a per-key GET.
     const metadata = { ss: sources, c: cf.country || 'XX' }

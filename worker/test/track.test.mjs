@@ -30,3 +30,34 @@ test('oil cron: fails closed when OIL_CRON_KEY unset', async () => {
   assert.equal((await handleOilCron(r, {}, {})).status, 403)
   assert.equal((await handleOilPredictCron(r, {}, {})).status, 403)
 })
+
+const reqFrom = (country) => {
+  const r = req()
+  Object.defineProperty(r, 'cf', { value: { country } })
+  return r
+}
+
+test('track: TRACK_ALL_RL (key "all") blocks the KV write, response unchanged', async () => {
+  const e = env()
+  const keys = []
+  e.TRACK_ALL_RL = { async limit({ key }) { keys.push(key); return { success: false } } }
+  const r = await handleTrack(reqFrom('TW'), {}, e)
+  assert.equal(r.status, 200)
+  assert.deepEqual(await r.json(), { ok: true, sampled: false })
+  assert.equal(e.puts.length, 0)
+  assert.deepEqual(keys, ['all'])
+  e.TRACK_ALL_RL = { async limit() { return { success: true } } }
+  await handleTrack(reqFrom('TW'), {}, e)
+  assert.equal(e.puts.length, 1)
+})
+
+test('track: non-TW events get the smaller per-colo cap; TW keeps DAILY_CAP', async () => {
+  const { FOREIGN_DAILY_CAP } = await import('../src/track.js')
+  globalThis.caches = fakeCaches()
+  const e = env()
+  for (let i = 0; i < DAILY_CAP; i++) await handleTrack(reqFrom('DE'), {}, e)
+  assert.equal(e.puts.length, FOREIGN_DAILY_CAP)
+  for (let i = 0; i < DAILY_CAP + 5; i++) await handleTrack(reqFrom('TW'), {}, e)
+  assert.equal(e.puts.length, FOREIGN_DAILY_CAP + DAILY_CAP)
+  delete globalThis.caches
+})

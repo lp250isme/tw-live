@@ -36,3 +36,16 @@ export async function cachedNumber(tag, ttl, producer) {
   }
   return n
 }
+
+// Account-protection limiter (2026-11-27 KV write-quota abuse): one ratelimits binding
+// called with the fixed key "all", so every caller in a Cloudflare location shares one
+// bucket (counts are per location, not worldwide). Returns true = blocked. Unbound
+// (tests / local) or limiter error → not blocked.
+export async function limitedAll(rl) {
+  if (!rl) return false
+  try {
+    return !(await rl.limit({ key: 'all' })).success
+  } catch {
+    return false
+  }
+}
