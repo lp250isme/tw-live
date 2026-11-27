@@ -1,6 +1,6 @@
 import { json } from './cors'
 import { turnstileGate, turnstileTokenFrom } from './turnstile'
-import { cachedNumber } from './daycap'
+import { cachedNumber, limitedAll } from './daycap'
 
 // Self-hosted Web Push (VAPID + RFC 8291 aes128gcm) on Workers WebCrypto — no
 // third-party push service, no per-message cost. Subscriptions live in KV; the
@@ -101,6 +101,30 @@ export function isAllowedPushEndpoint(raw) {
   return PUSH_HOSTS.includes(h) || PUSH_SUFFIXES.some((s) => h.endsWith(s))
 }
 
+// Stricter shape check, applied only before storing a NEW subscription (existing
+// subscribers keep the host-only check above, so a refresh or fan-out never breaks).
+// Real endpoints: fcm.googleapis.com/fcm/send/<token> or /wp/<token>, web.push.apple.com/<token>,
+// updates.push.services.mozilla.com/wpush/v2/<token>, *.notify.windows.com/w/?token=<token>;
+// tokens are 100+ chars, so "≥16 chars after the host" never rejects a real browser.
+export const MAX_ENDPOINT = 1024
+export function isPlausibleNewSub(sub) {
+  const raw = sub?.endpoint
+  if (typeof raw !== 'string' || raw.length > MAX_ENDPOINT || !isAllowedPushEndpoint(raw)) return false
+  const u = new URL(raw)
+  if (u.hash) return false
+  if (u.hostname === 'fcm.googleapis.com') {
+    if (u.search || !/^\/(fcm\/send|wp)\/[^/]{16,}$/.test(u.pathname)) return false
+  } else if ((u.pathname + u.search).length < 17) return false
+  // RFC 8291: p256dh = 65-byte uncompressed P-256 point, auth = 16 bytes.
+  try {
+    const p = b64uToBytes(String(sub.keys.p256dh))
+    const a = b64uToBytes(String(sub.keys.auth))
+    return p.length === 65 && p[0] === 4 && a.length === 16
+  } catch {
+    return false
+  }
+}
+
 export const MAX_SUBS = 500
 const REFRESH_MS = 7 * 24 * 3600 * 1000
 const MAX_BODY = 4096 // a real PushSubscription is ~0.5KB
@@ -146,12 +170,18 @@ export async function handlePushSubscribe(request, ctx, env) {
   // ponytail: total cap MAX_SUBS (500) so anonymous subscribes can't grow KV writes without
   // bound. Count comes from a 5-min Cache API'd list (no counter writes). Re-subscribing an
   // existing endpoint within 7 days is a no-op (no write). Upgrade path: D1 if >500 real users.
+  // 2026-11-27 KV write-quota guard: PUSH_NEW_RL (key "all", per location) gates every
+  // subscription write. A throttled refresh is skipped silently (the stored copy still
+  // works); a throttled new subscription gets 429.
   const existingRaw = await env.TDX_KV.get(`push:${id}`)
   if (existingRaw) {
     try {
       if (Date.now() - (JSON.parse(existingRaw).t || 0) < REFRESH_MS) return json({ ok: true })
     } catch { /* corrupt → rewrite */ }
+    if (await limitedAll(env.PUSH_NEW_RL)) return json({ ok: true })
   } else {
+    if (!isPlausibleNewSub(sub)) return json({ error: 'endpoint not allowed' }, 400)
+    if (await limitedAll(env.PUSH_NEW_RL)) return json({ error: 'rate limited' }, 429)
     const n = await cachedNumber('push-count', 300, async () => {
       const res = await env.TDX_KV.list({ prefix: 'push:', limit: MAX_SUBS + 1 })
       return res.keys.length
